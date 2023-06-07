@@ -18,6 +18,7 @@ const Role = require('./Models/AuthModel/Role');
 
 // Routes
 const authRoute = require('./Routes/authRoute');
+const employeeRoute = require('./Routes/employeeRoutes');
 
 // middlware that parses the incoming request body as JSON
 app.use(bodyParser.json());
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 
 // Useing the Auth Routes
 app.use('/api/auth', authRoute);
+app.use('/api/employee', employeeRoute);
 
 // Defines the relationships
     // Employees ---> (Employee_Roles) <--- Roles
@@ -47,8 +49,11 @@ sequelize
     .sync()
         .then(() => {
             console.log('Connected To pms Database Successfully..!');
-            app.listen(7000);
+            app.listen(process.env.SERVER_PORT);
         })
+        .then(() =>
+            console.log('Running on Port: ' + process.env.SERVER_PORT)
+        )
         .catch(err => 
             console.log(err)
         );

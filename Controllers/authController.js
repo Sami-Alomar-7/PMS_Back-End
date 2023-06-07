@@ -78,11 +78,15 @@ exports.getRole = (req, res, next) => {
         include: Role
     })
     .then(employee => {
-        res.status(200).json({
+        return res.status(200).json({
             employee: employee,
         });
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+        return res.status(400).json({
+            message: err
+        });
+    });
 };
 
 exports.postLogin = (req, res, next) => {
@@ -171,22 +175,17 @@ exports.postVerifyLoggin = (req, res, next) => {
         // mark the employee as logged in
         employee.statu = true;
         return employee.save()
-            .then(employee => {
-                // create the token and store it 
-                const {token, expiry} = tokenHelper.generat(employee);
-                employee.token = token;
-                employee.token_expiration = expiry;
-                    
-                return employee.save()
-            })
-            .then(employee => {
-                return res.status(200).json({
-                    operation: 'Succeed',
-                    message: 'Logged In Successfully',
-                    employee: employee,
-                    token: 'Bearer ' + employee.token
-                })
-            })
+    })
+    .then(employee => {
+        // create the token and send it 
+        const {token} = tokenHelper.generat(employee);
+    
+        return res.status(200).json({
+            operation: 'Succeed',
+            message: 'Logged In Successfully',
+            employee: employee,
+            token: 'Bearer ' + token
+        });
     })
     .catch(err => {
         return res.status(401).json({

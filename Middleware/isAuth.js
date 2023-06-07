@@ -23,15 +23,16 @@ module.exports = (req, res, next) => {
             message: 'Cannot Decode And Verify Token'
         });
     }
-
-    if(!decodedToken){
+    
+    if(!decodedToken)
         return res.status(401).json({
             operation: 'Failed',
             message: 'Not Authenticated'
         });
-    }
     
     // set the employee id to the req object to use it later
     req.employeeId = decodedToken.id;
+
+    // continue to the next stage
     next();
 }
