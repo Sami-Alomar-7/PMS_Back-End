@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // models
-const Employee = require('../Models/AuthModels/Employee');
+const Company = require('../Models/CompaniesModels/CompanyModel');
 
 // Required Middleware
 const isAuth = require('../Middleware/isAuth');
@@ -12,27 +12,33 @@ const isAdmin = require('../Middleware/isAdmin');
 const { check } = require('express-validator');
 
 // the controllers which the requests forwarded to
-const employeeController = require('../Controllers/employeeController');
+const companyController = require('../Controllers/companyController');
 
-router.get('/profile', isAuth, employeeController.getEmployeeProfile);
 
-router.get('/display-employees', [
-        isAuth,
-        isAdmin
-    ],
-    employeeController.getAllEmployees
+router.get('/display-all', [
+    isAuth,
+    isAdmin
+],
+companyController.getAllCompanies
 );
 
-router.post('/add-employee', [
+router.get('/display-all', [
+    isAuth,
+    isAdmin
+],
+companyController.getCompanyProfile
+);
+
+router.post('/add-company', [
         // checking the incoming data from the request
         check('email')
             .isEmail()
             .withMessage('Please Enter A Valid E-mail')
             .normalizeEmail()
             .custom(value => {
-                return Employee.findOne({where: {email: value}})
-                    .then(employee => {
-                        if(employee)
+                return Company.findOne({where: {email: value}})
+                    .then(company => {
+                        if(company)
                             return Promise.reject('E-Mail Is Already Exists, Please Pick A Different One');
                     })
             }),
@@ -63,10 +69,10 @@ router.post('/add-employee', [
         isAuth,
         isAdmin
     ],
-    employeeController.postAddEmployee
+    companyController.postAddCompany
 );
 
-router.put('/update-employee', [
+router.put('/update-company', [
         // checking the incoming data from the request
         check('email')
             .isEmail()
@@ -95,14 +101,14 @@ router.put('/update-employee', [
         isAuth,
         isAdmin
     ],
-    employeeController.putUpdateProfile
+    companyController.putUpdateProfile
 );
 
-router.delete('/delete-employee', [
+router.delete('/delete-company', [
         isAuth,
         isAdmin
     ],
-    employeeController.deleteEmployee
+    companyController.deleteCompany
 );
 
 module.exports = router;

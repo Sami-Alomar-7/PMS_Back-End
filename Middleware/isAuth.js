@@ -29,7 +29,7 @@ module.exports = (req, res, next) => {
             operation: 'Failed',
             message: 'Not Authenticated'
         });
-    
+        
     // set the employee id to the req object to use it later
     req.employeeId = decodedToken.id;
 

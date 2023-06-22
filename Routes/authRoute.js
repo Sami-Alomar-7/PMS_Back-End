@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // models
-const Employee = require('../Models/AuthModel/Employee');
+const Employee = require('../Models/AuthModels/Employee');
 
 // Required Middleware
 const firstRegister = require('../Middleware/firstRegister');

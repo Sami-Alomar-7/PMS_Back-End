@@ -1,10 +1,13 @@
 // Models 
-const Employee = require('../Models/AuthModel/Employee');
-const EmployeeRole = require('../Models/AuthModel/EmployeeRole');
-const Role = require('../Models/AuthModel/Role');
+const Employee = require('../Models/AuthModels/Employee');
+const EmployeeRole = require('../Models/AuthModels/EmployeeRole');
+const Role = require('../Models/AuthModels/Role');
 
 // using the .env file
 require('dotenv').config();
+
+// for the requests which failes not to fill the storage with unwanted files
+const deleteAfterMulter = require('../Helper/deleteAfterMulter');
 
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
@@ -17,7 +20,7 @@ const codeHelper = require('../Helper/code');
 // for sending mailes
 const mailsHelper = require('../Helper/mails');
 
-// 
+// for comparision operations in database
 const { Op } = require('sequelize');
 
 // POST - Register
@@ -29,14 +32,17 @@ exports.postRegister = (req, res, next) => {
     const address = req.body.address;
     const gender = req.body.gender;
     const role = req.body.role;
+    const image = req.file;
     const errors = validationResult(req);
 
     // check if there is an error in the request
-    if(!errors.isEmpty())
+    if(!errors.isEmpty()){
+        deleteAfterMulter(image.path);
         return res.status(401).json({
             operation: 'Failed',
             message: errors.array()
         });
+    }
     
     // hash the password and store the new record
     bcrypt.hash(password, 12)
@@ -66,6 +72,7 @@ exports.postRegister = (req, res, next) => {
                 })
         })
         .catch(err => {
+            deleteAfterMulter(image.path);
             return res.status(400).json({
                 message: err
             });
@@ -343,4 +350,34 @@ exports.postNewPassword = (req, res, next) => {
                 message: err
             })
         });
+};
+
+exports.postLogout = (req, res, next) => {
+    const employeeId = req.employeeId;
+
+    Employee.finOne({where: {id: employeeId}})
+        .then(employee => {
+            if(!employee)
+                return res.status(401).json({
+                    operation: 'Failed',
+                    message: 'Unauthorized'
+                });
+            
+            employee.token = null;
+            employee.token_expiration = null;
+
+            return employee.save();
+        })
+        .then(() => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                meesage: 'Employee Logged Out'
+            });
+        })
+        .catch(err => {
+            return res.status(401).json({
+                operation: 'Failed',
+                message: err
+            });
+        })
 };

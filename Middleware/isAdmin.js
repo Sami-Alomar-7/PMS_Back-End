@@ -1,5 +1,5 @@
-const Employee = require('../Models/AuthModel/Employee');
-const Role = require('../Models/AuthModel/Role');
+const Employee = require('../Models/AuthModels/Employee');
+const Role = require('../Models/AuthModels/Role');
 
 module.exports = (req, res, next) => {
     // get the employee id from the request which had already set by the 'isAuth' Middleware

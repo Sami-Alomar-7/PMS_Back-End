@@ -1,7 +1,5 @@
 // Models 
-const Employee = require('../Models/AuthModels/Employee');
-const EmployeeRole = require('../Models/AuthModels/EmployeeRole');
-const Role = require('../Models/AuthModels/Role');
+const Company = require('../Models/CompaniesModels/CompanyModel');
 
 // using the .env file
 require('dotenv').config();
@@ -15,17 +13,17 @@ const { validationResult } = require('express-validator');
 // for hashing and creating tokens
 const bcrypt = require('bcryptjs');
 
-exports.getAllEmployees = (req, res, next) => {
-    Employee.findAll({limit: 6})
-    .then(employees => {
-        if(!employees)
+exports.getAllCompanies = (req, res, next) => {
+    Company.findAll({limit: 6})
+    .then(company => {
+        if(!company)
             return res.status(404).json({
                 operation: 'Failed',
-                message: 'Could Not Find The Employee'
+                message: 'Could Not Find The Company'
             })
         return res.status(200).json({
             operation: 'Succeed',
-            employees: employees
+            companies: company
         })
     })
     .catch(err => {
@@ -36,23 +34,20 @@ exports.getAllEmployees = (req, res, next) => {
     })
 };
 
-exports.getEmployeeProfile = (req, res, next) => {
-    const employeeId = req.employeeId;
+exports.getCompanyProfile = (req, res, next) => {
+    const companyId = param.companyId;
 
-    Employee.findOne({
-        where: { id: employeeId },
-        include: Role
-    })
-    .then(employee => {
-        if(!employee)
+    Company.findOne({where: { id: companyId}})
+    .then(company => {
+        if(!company)
             return res.status(404).json({
                 operation: 'Failed',
-                message: 'Could Not Find The Employee'
+                message: 'Could Not Find The Company'
             })
             
         return res.status(200).json({
             operation: 'Succeed',
-            employee: employee
+            company: company
         })
     })
     .catch(err => {
@@ -63,15 +58,13 @@ exports.getEmployeeProfile = (req, res, next) => {
     })
 };
 
-exports.postAddEmployee = (req, res, next) =>{
+exports.postAddCompany = (req, res, next) =>{
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
     const phone_number = req.body.phone_number;
-    const address = req.body.address;
-    const gender = req.body.gender;
-    const salary = req.body.salary;
-    const role = req.body.role;
+    const location = req.body.location;
+    const type = req.body.type;
     const image = req.file;
     const errors = validationResult(req);
 
@@ -80,37 +73,22 @@ exports.postAddEmployee = (req, res, next) =>{
         deleteAfterMulter(image.path);
         return res.status(401).json({
             operation: 'Failed',
-            message: errors.array()
+            message: errors[0].msg
         });
     }
     
     // hash the password and store the new record
     bcrypt.hash(password, 12)
         .then(hashedPassword => {
-            const employee = new Employee({
+            const company = new Company({
                 name: name,
                 email: email,
                 password: hashedPassword,
-                address: address,
-                gender: gender,
+                location: location,
+                type: type,
                 phone_number: phone_number
             });
-            return employee.save()
-                .then(employee => {
-                    const employeeRole = new EmployeeRole({
-                        employeeId: employee.id,
-                        roleId: role,
-                        salary: salary
-                    });
-                    return employeeRole.save();
-                })
-                .then(employeeRole => {
-                    return res.status(200).json({
-                        message: 'Succeed',
-                        employee: employee,
-                        employeeRole: employeeRole
-                    });
-                })
+            return company.save()
         })
         .catch(err => {
             deleteAfterMulter(image.path);
@@ -121,15 +99,13 @@ exports.postAddEmployee = (req, res, next) =>{
 };
 
 exports.putUpdateProfile = (req, res, next) => {
-    const updteEmployeeId = req.body.updateEmployeeId;
+    const updateCompanyId = req.body.updateCompanyId;
     const updatedName = req.body.name;
     const updatedEmail = req.body.email;
     const updatedPassword = req.body.password;
     const updatedPhone_number = req.body.phone_number;
-    const updatedAddress = req.body.address;
-    const updatedSalary = req.body.salary;
-    const updatedEmployeeOfTheMonth = req.body.employeeOfTheMonth;
-    const updatedRole = req.body.role;
+    const updatedLocation = req.body.location;
+    const updatedType = req.body.type;
     const updateImage = req.file;
     const errors = validationResult(req);
 
@@ -138,40 +114,32 @@ exports.putUpdateProfile = (req, res, next) => {
         deleteAfterMulter(updateImage.path);
         return res.status(401).json({
             operation: 'Failed',
-            message: errors.array()
+            message: errors[0].msg
         });
     }
         
-    // get the employee and update his data
-    Employee.findOne({
-        where: { id: updteEmployeeId },
-        include: Role
-    })
-    .then(employee => {
-        
-        if(!employee){
-            deleteAfterMulter(updateImage.path);
+    // get the Company and update his data
+    Company.findOne({where: { id: updateCompanyId}})
+    .then(company => {
+        if(!company)
             return res.status(404).json({
                 operation: 'Failed',
-                message: 'Employee Not Found'
+                message: 'Company Not Found'
             });
-        }
             
-        employee.name = updatedName;
-        employee.email = updatedEmail;
-        employee.password = updatedPassword;
-        employee.phone_number = updatedPhone_number;
-        employee.address = updatedAddress;
-        employee.roles[0].employee_role.employee_of_the_month = updatedEmployeeOfTheMonth;
-        employee.roles[0].employee_role.salary = updatedSalary;
-        employee.roles[0].employee_role.roleId = updatedRole;
+        company.name = updatedName;
+        company.email = updatedEmail;
+        company.password = updatedPassword;
+        company.phone_number = updatedPhone_number;
+        company.location = updatedLocation;
+        company.type = updatedType;
         
-        return employee.save();
+        return company.save();
     })
-    .then(updatedEmployee => {
+    .then(updatedCompany => {
         return res.status(200).json({
             operation: 'Succeed',
-            updatedEmployee: updatedEmployee
+            updatedCompany: updatedCompany
         })
     })
     .catch(err => {
@@ -183,19 +151,19 @@ exports.putUpdateProfile = (req, res, next) => {
     });
 };
 
-exports.deleteEmployee = (req, res, next) => {
-    const employeeId = req.body.employeeId;
-
-    Employee.destroy({where: {id: employeeId}})
-        .then(deletedEmployee => {
-            if(!deletedEmployee)
+exports.deleteCompany = (req, res, next) => {
+    const companyId = req.body.companyId;
+    
+    Company.destroy({where: {id: companyId}})
+        .then(deletedCompany => {
+            if(!deletedCompany)
                 return res.status(404).json({
                     operation: 'Failed',
-                    message: 'Employee Not Found'
+                    message: 'Company Not Found'
                 });
             return res.status(200).json({
                 operation: 'Succeed',
-                employee: deletedEmployee
+                message: 'Company Deleted Successfully'
             });
         })
         .catch(err => {

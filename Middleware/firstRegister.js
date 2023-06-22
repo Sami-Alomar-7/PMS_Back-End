@@ -1,4 +1,4 @@
-const Employee = require('../Models/AuthModel/Employee');
+const Employee = require('../Models/AuthModels/Employee');
 
 module.exports = (req, res, next) => {
 
