@@ -20,7 +20,7 @@ const Product = sequelize.define('products', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    manefactorer_name: {
+    manufactorer_name: {
         type: Sequelize.STRING,
         allowNull: false
     },

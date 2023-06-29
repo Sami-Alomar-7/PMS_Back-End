@@ -11,7 +11,8 @@ const Type = sequelize.define('types', {
     name: {
         type: Sequelize.STRING,
         allowNull: false
-    }
+    },
+    image_url: Sequelize.STRING
 }, {
     timestamps: false
 });

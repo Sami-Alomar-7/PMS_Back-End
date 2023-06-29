@@ -18,9 +18,9 @@ module.exports = (req, res, next) => {
         // get the data from the token by decoding it
         decodedToken = jwt.verify(token, process.env.JWT_SECRETE_KEY);
     } catch(err) {
-        return res.status(500).json({
+        return res.status(401).json({
             operation: 'Failed',
-            message: 'Cannot Decode And Verify Token'
+            message: 'Not Authorized, This Token Isn\'t Valid'
         });
     }
     
@@ -35,4 +35,4 @@ module.exports = (req, res, next) => {
 
     // continue to the next stage
     next();
-}
+};

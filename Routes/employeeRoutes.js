@@ -86,11 +86,7 @@ router.put('/update-employee', [
             .trim(),
         check('gender')
             .isString()
-            .trim(),
-        check('salary')
-            .isFloat(),
-        check('employeeOfTheMonth')
-            .isBoolean()
+            .trim()
     ], [
         isAuth,
         isAdmin

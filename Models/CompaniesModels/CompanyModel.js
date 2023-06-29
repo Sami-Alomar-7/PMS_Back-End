@@ -20,16 +20,17 @@ const Company = sequelize.define('companies', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    image_url: Sequelize.STRING,
     location: {
         type: Sequelize.STRING,
         allowNull: false
     },
     type: {
         type: Sequelize.ENUM,
-        values: ['products','drugs','rows','productsAndDrugs','productsAndrows','drugsAndRows','all'],
+        values: ['products','drugs','raws','productsAndDrugs','productsAndrows','drugsAndRaws','all'],
+        len: [1,20],
         allowNull: false
-    },
-    image_url: Sequelize.STRING
+    }
 }, {
     timestamps: false
 });

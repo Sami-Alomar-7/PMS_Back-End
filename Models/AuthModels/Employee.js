@@ -20,6 +20,7 @@ const Employee = sequelize.define('employee', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    image_url: Sequelize.STRING,
     address: {
         type: Sequelize.STRING,
         allowNull: false

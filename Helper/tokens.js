@@ -2,9 +2,9 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 exports.generat = (employee) => {
-    // get the current time and set the expiration date
-    const timestamp = new Date().getTime();
-    const expiry = timestamp + 60 * 60 * 1000;
+    // get the current time and set the expiration after one houre
+    const timestamp = Date.now();
+    const expiry = timestamp + (60 * 60 * 1000);
 
     const secret = process.env.JWT_SECRETE_KEY;
 
@@ -15,8 +15,8 @@ exports.generat = (employee) => {
             statu: employee.statu,
             date: timestamp,
         },
-        secret,{
-            expiresIn: expiry
+        secret, {
+            expiresIn: '1h'
         }
     );
 

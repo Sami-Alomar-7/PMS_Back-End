@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const Row = sequelize.define('rows', {
+const Raw = sequelize.define('raws', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -20,7 +20,8 @@ const Row = sequelize.define('rows', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    manefactorer_name: {
+    image_url: Sequelize.STRING,
+    manufactorer_name: {
         type: Sequelize.STRING,
         allowNull: false
     },
@@ -28,9 +29,8 @@ const Row = sequelize.define('rows', {
         type: Sequelize.TEXT,
         allowNull: false
     },
-    image_url: Sequelize.STRING
 }, {
     timestamps: false
 });
 
-module.exports = Row;
+module.exports = Raw;

@@ -20,25 +20,30 @@ const sequelize = require('./Util/database');
         const Company = require('./Models/CompaniesModels/CompanyModel');
         const Debt = require('./Models/CompaniesModels/DebtModel');
         const CompanyProductItem = require('./Models/CompaniesModels/CompanyProductItemModel');
-        const CompanyRowItem = require('./Models/CompaniesModels/CompanyRowItemModel');
+        const CompanyRawItem = require('./Models/CompaniesModels/CompanyRawItemModel');
     // Product Model
         const Product = require('./Models/ProductsModels/ProductModel');
         const Category = require('./Models/ProductsModels/CategoryModel');
         const Type = require('./Models/ProductsModels/TypeModel');
-        const Scince = require('./Models/ProductsModels/ScinceMode');
-    // Row Model
-        const Row = require('./Models/RowsModels/RowModel');
-        const RowCategory = require('./Models/RowsModels/CategoryModel');
+        const Scince = require('./Models/ProductsModels/ScinceModel');
+    // Raw Model
+        const Raw = require('./Models/RawsModels/RawModel');
+        const RawCategory = require('./Models/RawsModels/CategoryModel');
 
 
 // Routes
 const authRoute = require('./Routes/authRoute');
 const employeeRoute = require('./Routes/employeeRoutes');
 const companyRoute = require('./Routes/companyRoutes');
+const debtRoute = require('./Routes/debtRoute');
 
 // Middleware
     // Multer for file uploading 
     const multer = require('multer');
+
+// Helper
+    // for setting up the required data into the database
+    const setupDataset = require('./Helper/setupDatabase/setupDatabase');
 
 // middlware that parses the incoming request body as JSON
 app.use(bodyParser.json());
@@ -76,6 +81,7 @@ app.use(upload.single('image'));
 app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/company', companyRoute);
+app.use('/api/debt', debtRoute);
 
 // Defines the models and its associations
     // Employees ---> (Employee_Roles) <--- Roles
@@ -99,10 +105,10 @@ app.use('/api/company', companyRoute);
     // Scince ---> Products
         Scince.hasMany(Product);
         Product.belongsTo(Scince);
-// Rows
-    // RowCategories ---> Rows
-        RowCategory.hasMany(Row);
-        Row.belongsTo(RowCategory);
+// Raws
+    // rawCategories ---> Raws
+        RawCategory.hasMany(Raw);
+        Raw.belongsTo(RawCategory);
     // Companies ---> (Company_Product_Item) <--- Products
         Company.belongsToMany(Product, { through: CompanyProductItem });
         Product.belongsToMany(Company, { through: CompanyProductItem });
@@ -110,19 +116,27 @@ app.use('/api/company', companyRoute);
         CompanyProductItem.belongsTo(Company);
         Product.hasMany(CompanyProductItem);
         CompanyProductItem.belongsTo(Product);
-    // Companies --> (Company_Row_Item) <--- Row
-        Company.belongsToMany(Row, { through: CompanyRowItem });
-        Row.belongsToMany(Company, { through: CompanyRowItem });
-        Company.hasMany(CompanyRowItem);
-        CompanyRowItem.belongsTo(Company);
-        Row.hasMany(CompanyRowItem);
-        CompanyRowItem.belongsTo(Row);
+    // Companies --> (Company_Raw_Item) <--- Raw
+        Company.belongsToMany(Raw, { through: CompanyRawItem });
+        Raw.belongsToMany(Company, { through: CompanyRawItem });
+        Company.hasMany(CompanyRawItem);
+        CompanyRawItem.belongsTo(Company);
+        Raw.hasMany(CompanyRawItem);
+        CompanyRawItem.belongsTo(Raw);
 
 // Connecting to the database
 sequelize
     .sync()
         .then(() => {
             console.log('Connected To pms Database Successfully..!');
+            // check if there is a required data not set...if so insert it into the database
+            return setupDataset()
+        })
+        .then(setted => {
+            if(!setted)
+                return new Error('Couldn\'t set the required dataset to the database');
+            
+            // let the server listen on the chosed port 
             app.listen(process.env.SERVER_PORT);
         })
         .then(() =>

@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const RowCategory = sequelize.define('rows_categories', {
+const RowCategory = sequelize.define('raws_categories', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -11,7 +11,8 @@ const RowCategory = sequelize.define('rows_categories', {
     name: {
         type: Sequelize.STRING,
         allowNull: false
-    }
+    },
+    image_url: Sequelize.STRING
 }, {
     timestamps: false
 });

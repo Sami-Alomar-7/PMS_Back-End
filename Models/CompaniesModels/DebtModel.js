@@ -9,11 +9,11 @@ const Debt = sequelize.define('debts', {
         primaryKey: true
     },
     debt: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.FLOAT,
         allowNull: false
     },
     credit: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.FLOAT,
         allowNull: false
     }
 });

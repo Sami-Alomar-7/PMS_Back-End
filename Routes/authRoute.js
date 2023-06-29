@@ -12,6 +12,7 @@ const { check } = require('express-validator');
 
 // the controllers which the requests forwarded to
 const authController = require('../Controllers/authController');
+const { compareSync } = require('bcryptjs');
 
 // POST - Register (localhost:7000/api/auth/register)
 router.post('/register', [
@@ -71,10 +72,10 @@ router.post('/login',[
         check('email')
             .isEmail()
             .withMessage('Please Enter A Valid E-mail')
-            .normalizeEmail()
             .custom(value => {
                 return Employee.findOne({where: {email: value}})
                     .then(employee => {
+                        console.log(employee)
                         if(!employee)
                             return Promise.reject('E-mail Is Not Exists, Please Enter A Valid E-mail');
                     });

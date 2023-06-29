@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const Scince = sequelize.define('Scince', {
+const Scince = sequelize.define('scinces', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -11,7 +11,8 @@ const Scince = sequelize.define('Scince', {
     name: {
         type: Sequelize.STRING,
         allowNull: false
-    }
+    },
+    image_url: Sequelize.STRING
 }, {
     timestamps: false
 });
