@@ -34,8 +34,7 @@ const sequelize = require('./Util/database');
 // Routes
 const authRoute = require('./Routes/authRoute');
 const employeeRoute = require('./Routes/employeeRoutes');
-const companyRoute = require('./Routes/companyRoutes');
-const debtRoute = require('./Routes/debtRoute');
+const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
 
 // Middleware
     // Multer for file uploading 
@@ -81,7 +80,6 @@ app.use(upload.single('image'));
 app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/company', companyRoute);
-app.use('/api/debt', debtRoute);
 
 // Defines the models and its associations
     // Employees ---> (Employee_Roles) <--- Roles

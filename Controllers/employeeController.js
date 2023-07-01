@@ -18,8 +18,17 @@ const bcrypt = require('bcryptjs');
     // for the files reaching
     const path = require('path');
 
+// number of employees which wiil be sent with a single request
+const EMPLOYEE_PER_REQUEST = 4;
+
 exports.getAllEmployees = (req, res, next) => {
-    Employee.findAll({limit: 6})
+    // get the page number if not then we are in the first one
+    const page = req.query.page || 1;
+
+    Employee.findAll({
+        offset: (page-1) * EMPLOYEE_PER_REQUEST,
+        limit: EMPLOYEE_PER_REQUEST
+    })
     .then(employees => {
         return res.status(200).json({
             operation: 'Succeed',

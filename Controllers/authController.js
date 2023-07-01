@@ -25,7 +25,6 @@ const { Op } = require('sequelize');
     const deleteAfterMulter = require('../Helper/deleteAfterMulter');
     // for the files reaching
     const path = require('path');
-const exp = require('constants');
 
 // POST - Register
 exports.postRegister = (req, res, next) => {

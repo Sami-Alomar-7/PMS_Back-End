@@ -11,8 +11,7 @@ const Scince = sequelize.define('scinces', {
     name: {
         type: Sequelize.STRING,
         allowNull: false
-    },
-    image_url: Sequelize.STRING
+    }
 }, {
     timestamps: false
 });

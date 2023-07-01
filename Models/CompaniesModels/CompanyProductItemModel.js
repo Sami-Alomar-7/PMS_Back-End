@@ -8,8 +8,12 @@ const CompanyProductItem = sequelize.define('company_product_items', {
         allowNull: false,
         primaryKey: true
     },
-    quantity: {
-        type: Sequelize.INTEGER,
+    price: {
+        type: Sequelize.FLOAT,
+        allowNull: false
+    },
+    expiration_date:{
+        type: Sequelize.DATE,
         allowNull: false
     }
 }, {

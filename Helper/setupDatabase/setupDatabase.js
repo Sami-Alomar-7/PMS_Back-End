@@ -7,6 +7,8 @@ const setupType = require('./setupType');
 const setupProduct = require('./setupProduct');
 const setupRawCategory = require('./setupRawCategory');
 const setupRaw = require('./setupRaw');
+const setupCompanyProductItem = require('./setupCompanyProductItem');
+const setupCompanyRawItem = require('./setupCompanyRawItem');
 
 module.exports = async () => {
     return new Promise(async (resolve, reject) => {
@@ -18,9 +20,13 @@ module.exports = async () => {
         const productSetted = await setupProduct();
         const rawCategorySetted = await setupRawCategory();
         const rawSetted = await setupRaw();
+        const companyProductItemSetted = await setupCompanyProductItem();
+        const companyRawItemSetted = await setupCompanyRawItem();
 
-        if(roleSetted && companySetted && scinceSetted && productCategorySetted && typeSetted && productSetted && rawCategorySetted && rawSetted)
-            return resolve(roleSetted && companySetted && scinceSetted && productCategorySetted && typeSetted && productSetted && rawCategorySetted && rawSetted);
+        if(roleSetted && companySetted && scinceSetted && productCategorySetted && typeSetted && 
+            productSetted && rawCategorySetted && rawSetted && companyProductItemSetted && companyRawItemSetted)
+            return resolve(roleSetted && companySetted && scinceSetted && productCategorySetted && typeSetted && 
+                productSetted && rawCategorySetted && rawSetted && companyProductItemSetted && companyProductItemSetted);
         else
             return reject('An Error Accuered When Setting Up The Database');
     })
