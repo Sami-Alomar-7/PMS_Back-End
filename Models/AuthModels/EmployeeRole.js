@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 const sequelize = require('../../Util/database');
 
 const EmployeeRole = sequelize.define('employee_role', {
-    employee_role_id: {
+    id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         allowNull: false,

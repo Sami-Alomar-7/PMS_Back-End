@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 
 exports.generat = (employee) => {
     // get the current time and set the expiration after one houre
-    const timestamp = Date.now();
-    const expiry = timestamp + (60 * 60 * 1000);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const expiry = timestamp + (60 * 60);
 
     const secret = process.env.JWT_SECRETE_KEY;
 

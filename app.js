@@ -13,14 +13,20 @@ const sequelize = require('./Util/database');
 
 // Models
     // Auth Model
-        const Employee = require('./Models/AuthModels/Employee');
-        const EmployeeRole = require('./Models/AuthModels/EmployeeRole');
-        const Role = require('./Models/AuthModels/Role');
+    const Employee = require('./Models/AuthModels/Employee');
+    const EmployeeRole = require('./Models/AuthModels/EmployeeRole');
+    const Role = require('./Models/AuthModels/Role');
     // Company Model
-        const Company = require('./Models/CompaniesModels/CompanyModel');
-        const Debt = require('./Models/CompaniesModels/DebtModel');
-        const CompanyProductItem = require('./Models/CompaniesModels/CompanyProductItemModel');
-        const CompanyRawItem = require('./Models/CompaniesModels/CompanyRawItemModel');
+    const Company = require('./Models/CompaniesModels/CompanyModel');
+    const CompanyProductItem = require('./Models/CompaniesModels/CompanyProductItemModel');
+    const CompanyRawItem = require('./Models/CompaniesModels/CompanyRawItemModel');
+    // Account Model
+    const Account = require('./Models/AccountModels/AccountModel');
+    const Debt = require('./Models/AccountModels/DebtModel');
+    // Buy Order Model
+    const BuyOrder = require('./Models/OrdersModels/BuyOrderModels/BuyOrderModel');
+    const BuyOrderItem = require('./Models/OrdersModels/BuyOrderModels/BuyOrderItemsModel');
+    const BuyRawOrderItem = require('./Models/OrdersModels/BuyOrderModels/BuyRawOrderItemsMode');
     // Product Model
         const Product = require('./Models/ProductsModels/ProductModel');
         const Category = require('./Models/ProductsModels/CategoryModel');
@@ -89,10 +95,34 @@ app.use('/api/company', companyRoute);
         EmployeeRole.belongsTo(Employee);
         Role.hasMany(EmployeeRole);
         EmployeeRole.belongsTo(Role);
-// Companies
-    // Companies ---> Debts
-        Company.hasMany(Debt);
-        Debt.belongsTo(Company);
+    // Companies
+        // Companies ---> Accounts
+        Company.hasMany(Account);
+        Account.belongsTo(Company);
+    // Account ---> (Debt) <--- Buy_Orders
+        Account.belongsToMany(BuyOrder, { through: Debt, onDelete: 'cascade' });
+        BuyOrder.belongsToMany(Account, { through: Debt, onDelete: 'cascade' });
+        Account.hasMany(Debt);
+        Debt.belongsTo(Account);
+        BuyOrder.hasMany(Debt);
+        Debt.belongsTo(BuyOrder);
+    // Companies ---> BuyOrders
+        Company.hasMany(BuyOrder);
+        BuyOrder.belongsTo(Company);
+    // Buy_Orders ---> (Buy_Orders_Items) <--- Company_Product_Items
+        BuyOrder.belongsToMany(CompanyProductItem, { through: BuyOrderItem, onDelete: 'cascade' });
+        CompanyProductItem.belongsToMany(BuyOrder, { through: BuyOrderItem });
+        BuyOrder.hasMany(BuyOrderItem);
+        BuyOrderItem.belongsTo(BuyOrder);
+        CompanyProductItem.hasMany(BuyOrderItem);
+        BuyOrderItem.belongsTo(CompanyProductItem);
+    // Buy_Orders ---> (Buy_Raw_Orders_Items) <--- Company_Raw_Items
+        BuyOrder.belongsToMany(CompanyRawItem, { through: BuyRawOrderItem, onDelete: 'cascade' });
+        CompanyRawItem.belongsToMany(BuyOrder, { through: BuyRawOrderItem });
+        BuyOrder.hasMany(BuyRawOrderItem);
+        BuyRawOrderItem.belongsTo(BuyOrder);
+        CompanyRawItem.hasMany(BuyRawOrderItem);
+        BuyRawOrderItem.belongsTo(CompanyRawItem);
 // Products
     // Categories ---> Products
         Category.hasMany(Product);

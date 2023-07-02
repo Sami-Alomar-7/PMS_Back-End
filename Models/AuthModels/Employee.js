@@ -32,6 +32,7 @@ const Employee = sequelize.define('employee', {
     },
     statu: {
         type: Sequelize.ENUM,
+        default: false,
         values: ['online','offline'],
         defaultValue: 'offline',
         allowNull: false

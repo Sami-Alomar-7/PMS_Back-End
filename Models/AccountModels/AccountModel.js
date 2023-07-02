@@ -1,23 +1,21 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const CompanyRowItem = sequelize.define('company_raw_items', {
+const Account = sequelize.define('accounts', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         allowNull: false,
         primaryKey: true
     },
-    price: {
+    debt: {
         type: Sequelize.FLOAT,
         allowNull: false
     },
-    expiration_date: {
-        type: Sequelize.DATE,
+    credit: {
+        type: Sequelize.FLOAT,
         allowNull: false
     }
-}, {
-    timestamps: false
 });
 
-module.exports = CompanyRowItem;
+module.exports = Account;

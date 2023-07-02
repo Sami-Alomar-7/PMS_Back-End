@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const Employee = require('../Models/AuthModels/Employee');
+
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
@@ -29,10 +31,19 @@ module.exports = (req, res, next) => {
             operation: 'Failed',
             message: 'Not Authenticated'
         });
-        
-    // set the employee id to the req object to use it later
-    req.employeeId = decodedToken.id;
 
-    // continue to the next stage
-    next();
+    // to determine that the token is indeed the current token which the employee use
+    Employee.findOne({where: {token: token}})
+        .then(employee => {
+            // set the employee id to the req object to use it later
+            req.employeeId = employee.id;
+            // continue to the next stage
+            next();
+        })
+        .catch(() => {
+            return res.status(401).json({
+                operation: 'Failed',
+                message: 'Not Authorized, This Token Isn\'t Valid'
+            })
+        })
 };

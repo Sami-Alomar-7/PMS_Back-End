@@ -190,7 +190,7 @@ exports.postVerifyLoggin = (req, res, next) => {
         // mark the employee as logged in and save the token and its expiration
         employee.statu = true;
         employee.token = token;
-        employee.token_expiration = expiry;
+        employee.token_expiration = expiry * 1000;
         
         return employee.save();
     })
