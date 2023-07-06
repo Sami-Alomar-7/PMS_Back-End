@@ -8,44 +8,24 @@ const CompanyRawItem = require('../../../Models/CompaniesModels/CompanyRawItemMo
 // using the .env file
 require('dotenv').config();
 
-// number of orders which wiil be sent with a single request
-const ORDERS_PER_REQUEST = 6;
-const ORDER_ITEMS_PER_REQUEST = 10;
+// for cheking if there were any errors in the rqueset body
+const { validationResult } = require('express-validator');
 
-exports.getAllOrders = (req, res, next) => {
-    // get the page number if not then we are in the first one
-    const page = req.query.page || 1;
-    
-    BuyOrder.findAll({ 
-        offset: (page-1) * ORDERS_PER_REQUEST,
-        limit: ORDERS_PER_REQUEST,
-        include: {
-            model: Company,
-            attributes: ['name', 'image_url', 'type'],
-        },
-        attributes: {
-            exclude: ['id', 'updatedAt', 'companyId']
-        }
-    })
-    .then(orders => {
-        return res.status(200).json({
-            operation: 'Succeed',
-            orders: orders
-        })
-    })
-    .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Buy_Orders Not Found'
-        })
-    })
-};
+// number of orders which wiil be sent with a single request
+const ORDER_ITEMS_PER_REQUEST = 10;
 
 exports.getSpecificOrder = (req, res, next) => {
     // get the order it from the request params
     const orderId = req.body.orderId;
     const page = req.query.page || 1;
+    const errors = validationResult(req);
 
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
     BuyOrder.findOne({
         where: {id: orderId},
         include: [
@@ -70,22 +50,136 @@ exports.getSpecificOrder = (req, res, next) => {
         ]
     })
     .then(order => {
+        // get the total price for each raw
+        order.company_raw_items.forEach(companyRawItem => {
+            companyRawItem.buy_raw_order_items.dataValues.totalPrice = companyRawItem.price * companyRawItem.buy_raw_order_items.quantity;
+        });
         return res.status(200).json({
             operation: 'Succeed',
             order: order
         })
     })
-    .catch(() => {
-        return res.status(404).json({
+    .catch(err => {
+        return res.status(500).json({
             operation: 'Failed',
-            message: 'Buy_Order Not Found'
+            message: err
         })
     })
+};
+
+exports.postAddOrder = (req, res, next) => {
+    // get the company id which the order will be associated to and the list of the chosed raws
+    const companyId = req.body.companyId;
+    const raws = req.body.raws;
+    let totalPrice = 0, lastOrderNumber = 1;
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0]
+        });
+        
+    BuyOrder.findOne({order: [['updatedAt', 'DESC']]})
+        .then(order => {
+            // get a new order number for the new order
+            lastOrderNumber = order.order_number;
+            // calculate the total price for the whole order
+            raws.forEach(raw => {
+                totalPrice += raw.price * raw.quantity;
+            })
+            // add and save the new order with its data
+            return BuyOrder.create({
+                companyId: companyId,
+                total_price: totalPrice,
+                type: false,
+                order_number: ++lastOrderNumber
+            });
+        })
+        .then(buyOrder => {
+            // add and save each chosed raw from the given list after adding the required data to it
+            raws.forEach(raw => {
+                BuyRawOrderItem.create({
+                    companyRawItemId: raw.id,
+                    buyOrderId: buyOrder.id,
+                    quantity: raw.quantity
+                })
+            })
+        })
+        .then(() => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                message: 'Buy_Raw_Order Added Successfullt, You Can Check it Under The Number: ' + lastOrderNumber
+            })
+        })
+        .catch(err => {
+            return res.status(500).json({
+                operation: 'Failed',
+                message: err.message
+            })
+        })
+};
+
+exports.putEditOrder = (req, res, next) => {
+    // get the order id and the list of the chosed raws
+    const orderId = req.body.orderId;
+    const raws = req.body.raws;
+    let totalPrice = 0, orderTemp;
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0]
+        });
+        
+    BuyOrder.findOne({where: {id: orderId}})
+        .then(order => {
+            orderTemp = order;
+            // re-calculate the total price for the whole order and save it
+            raws.forEach(raw => {
+                totalPrice += raw.price * raw.quantity;
+            })
+            order.total_price = totalPrice;
+            return order.save();
+        })
+        .then(() => {
+            // travers on all the given raws and update the quantity of them if it has been modified
+            raws.forEach(raw => {
+                return BuyRawOrderItem.findOne({where: {companyRawItemId: raw.id}})
+                    .then(buyOrderItem => {
+                        buyOrderItem.quantity = raw.quantity;
+                        return buyOrderItem.save();
+                    })
+                    .catch(err => {
+                        throw new Error('Failed Editing the Buy_Order_Item quantities cause of:\n' + err.message);
+                    })
+            })
+        })
+        .then(() => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                order: 'Buy_Raw_Order Updated Successfully,You Can Check It Under The Number: ' + orderTemp.order_number
+            })
+        })
+        .catch(err => {
+            return res.status(500).json({
+                operation: 'Failed',
+                message: err.message
+            })
+        })
 };
 
 exports.deleteOrder = (req, res, next) => {
     // get the order id from the request body
     const orderId = req.body.orderId;
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
     
     BuyOrder.findOne({where: {id: orderId}})
         .then(order => {
@@ -98,10 +192,10 @@ exports.deleteOrder = (req, res, next) => {
                 message: 'Buy_Order Deleted Successfully'
             })
         })
-        .catch(() => {
+        .catch(err => {
             return res.status(404).json({
                 operation: 'Failed',
-                message: 'Buy_Order Not Found'
+                message: err
             })
         })
 };

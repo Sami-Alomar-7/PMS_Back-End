@@ -1,5 +1,6 @@
 // Models 
 const Company = require('../../Models/CompaniesModels/CompanyModel');
+const Type = require('../../Models/CompaniesModels/CompanyType');
 
 // using the .env file
 require('dotenv').config();
@@ -20,47 +21,46 @@ exports.getAllCompanies = (req, res, next) => {
 
     Company.findAll({
         offset: (page-1) * COMPANIES_PER_REQUEST,
-        limit: COMPANIES_PER_REQUEST
+        limit: COMPANIES_PER_REQUEST,
+        include: {
+            model: Type,
+            attributes: ['name']
+        }
     })
     .then(company => {
-        if(!company)
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Could Not Find The Company'
-            })
         return res.status(200).json({
             operation: 'Succeed',
             companies: company
         })
     })
-    .catch(err => {
-        return res.status(400).json({
+    .catch(() => {
+        return res.status(404).json({
             operation: 'Failed',
-            message: err
+            message: 'Companies Not Found'
         })
     })
 };
 
-exports.getCompanyProfile = (req, res, next) => {
-    const companyId = req.params.companyId;
+exports.getSpecificeCompany = (req, res, next) => {
+    const companyId = req.body.companyId;
 
-    Company.findOne({where: { id: companyId}})
+    Company.findOne({
+        where: { id: companyId},
+        include: {
+            model: Type,
+            attributes: ['name']
+        }
+    })
     .then(company => {
-        if(!company)
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Could Not Find The Company'
-            })
-            
         return res.status(200).json({
             operation: 'Succeed',
             company: company
         })
     })
-    .catch(err => {
-        return res.status(400).json({
+    .catch(() => {
+        return res.status(404).json({
             operation: 'Failed',
-            message: err
+            message: 'Company Not Found'
         })
     })
 };
@@ -85,11 +85,9 @@ exports.putUpdateProfile = (req, res, next) => {
             message: errors.array()[0].msg
         });
     }
-        console.log(req)
-    // get the Company and update his data
+    // get the Company and update its data
     Company.findOne({where: { id: updateCompanyId}})
         .then(company => {
-
             if(updateImage){
                 // remove the old image if it was updated
                 deleteAfterMulter(company.image_url);
@@ -100,14 +98,15 @@ exports.putUpdateProfile = (req, res, next) => {
             company.email = updatedEmail;
             company.phone_number = updatedPhone_number;
             company.location = updatedLocation;
-            company.type = updatedType;
-
+            company.companiesTypeId = updatedType;
+            
             return company.save();
         })
-        .then(updatedCompany => {
+        .then(company => {
             return res.status(200).json({
                 operation: 'Succeed',
-                updatedCompany: updatedCompany
+                message: 'Updated Successfully',
+                company: company
             })
         })
         .catch(() => {

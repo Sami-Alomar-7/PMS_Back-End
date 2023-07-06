@@ -1,23 +1,19 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const Account = sequelize.define('accounts', {
+const CompanyType = sequelize.define('companies_types', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         allowNull: false,
         primaryKey: true
     },
-    debt: {
-        type: Sequelize.FLOAT,
-        allowNull: false
-    },
-    credit: {
-        type: Sequelize.FLOAT,
+    name: {
+        type: Sequelize.STRING,
         allowNull: false
     }
-},{
+}, {
     timestamps: false
 });
 
-module.exports = Account;
+module.exports = CompanyType;

@@ -18,10 +18,8 @@ const companyController = require('../../Controllers/CompaniesController/company
     const rawRoute = require('./rawRoute');
     // The company debts routes
     const accountRoute = require('../AccountsRoutes/AccountRoute');
-    // The company productOrders routes
-    const ProductOrder = require('../OrdersRoutes/BuyOrdersRoutes/ProductOrderRoute');
-    // The company rawOrders routes
-    const RawOrder = require('../OrdersRoutes/BuyOrdersRoutes/RawOrderRoute');
+    // The company Orders routes
+    const orderRoute = require('../OrdersRoutes/BuyOrdersRoutes/orderRoute');
 
 router.get('/display-all', [
         isAuth,
@@ -30,11 +28,11 @@ router.get('/display-all', [
     companyController.getAllCompanies
 );
 
-router.get('/display-company-profile/:companyId', [
+router.get('/display-specifice-company', [
         isAuth,
         isAdmin
     ],
-    companyController.getCompanyProfile
+    companyController.getSpecificeCompany
 );
 
 router.put('/update-company', [
@@ -74,8 +72,6 @@ router.use('/raw', rawRoute);
 
 router.use('/account', accountRoute);
 
-router.use('/product-order', ProductOrder);
-
-router.use('/raw-order', RawOrder);
+router.use('/order', orderRoute);
 
 module.exports = router;

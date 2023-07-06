@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// models
+// Models
 const Employee = require('../Models/AuthModels/Employee');
 
 // Required Middleware
@@ -75,7 +75,6 @@ router.post('/login',[
             .custom(value => {
                 return Employee.findOne({where: {email: value}})
                     .then(employee => {
-                        console.log(employee)
                         if(!employee)
                             return Promise.reject('E-mail Is Not Exists, Please Enter A Valid E-mail');
                     });

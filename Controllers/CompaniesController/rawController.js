@@ -3,9 +3,13 @@ const Raw = require('../../Models/RawsModels/RawModel');
 const Category = require('../../Models/RawsModels/CategoryModel');
 const CompanyRawItem = require('../../Models/CompaniesModels/CompanyRawItemModel');
 const Company = require('../../Models/CompaniesModels/CompanyModel');
+const CompanyType = require('../../Models/CompaniesModels/CompanyType');
 
 // using the .env file
 require('dotenv').config();
+
+// for cheking if there were any errors in the rqueset body
+const { validationResult } = require('express-validator');
 
 // number of raws which wiil be sent with a single request
 const RAW_PER_REQUEST = 10;
@@ -19,15 +23,14 @@ exports.getAllRaws = (req, res, next) => {
         limit: RAW_PER_REQUEST,
         include: [
             {
+                model: Category,
+                attributes: ['name']
+            }, {
                 model: Company,
                 attributes: ['name','image_url'],
                 through: {
-                    model: CompanyRawItem,
-                    attributes: ['price', 'expiration_date']
+                    model: CompanyRawItem
                 }
-            }, {
-                model: Category,
-                attributes: ['name']
             }
         ]
     })
@@ -48,24 +51,32 @@ exports.getAllRaws = (req, res, next) => {
 exports.getSpecificRaw = (req, res, next) => {
     // get the debt it from the request params
     const rawId = req.body.rawId;
+    const errors = validationResult(req);
 
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
     Raw.findOne({
         where: {
             id: rawId
         },
+        attributes: {
+            exclude: ['rawsCategoryId']
+        },
         include: [
+            {
+                model: Category,
+                attributes: ['name']
+            },
             {
                 model: Company,
                 attributes: ['name','image_url'],
                 through: {
-                    model: CompanyRawItem,
-                    attributes: {
-                        exclude: ['rawId', 'companyId']
-                    }
+                    model: CompanyRawItem
                 }
-            }, {
-                model: Category,
-                attributes: ['name']
             }
         ]
     })
@@ -75,10 +86,10 @@ exports.getSpecificRaw = (req, res, next) => {
             raw: raw
         })
     })
-    .catch(() => {
-        return res.status(404).json({
+    .catch(err => {
+        return res.status(500).json({
             operation: 'Failed',
-            message: 'Product Not Found'
+            message: err
         })
     })
 };
@@ -88,28 +99,37 @@ exports.getSpecificCompanyRaws = (req, res, next) =>{
     const companyId = req.body.companyId;
     // get the page number if not then we are in the first one
     const page = req.query.page || 1;
+    const errors = validationResult(req);
 
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
     Company.findOne({
         offset: (page-1) * RAW_PER_REQUEST,
         limit: RAW_PER_REQUEST,
         where: {
             id: companyId
         },
-        include: {
-            model: Raw,
-            through: {
-                model: CompanyRawItem,
-                attributes: {
-                    exclude: ['rawId', 'companyId']
-                }
-            },
-            include: [
-                {
-                    model: Category,
-                    attributes: ['name']
-                }
-            ]
-        }
+        include: [
+            {
+                model: CompanyType,
+                attributes: ['name']
+            }, {
+                model: Raw,
+                through: {
+                    model: CompanyRawItem
+                },
+                include: [
+                    {
+                        model: Category,
+                        attributes: ['name']
+                    }
+                ]
+            }
+        ]
     })
     .then(company => {
         return res.status(200).json({
@@ -117,10 +137,10 @@ exports.getSpecificCompanyRaws = (req, res, next) =>{
             company: company
         })
     })
-    .catch(() => {
-        return res.status(404).json({
+    .catch(err => {
+        return res.status(500).json({
             operation: 'Failed',
-            message: 'Company Products Not Found'
+            message: err
         })
     });
 };

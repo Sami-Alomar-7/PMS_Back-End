@@ -16,6 +16,10 @@ const BuyOrder = sequelize.define('buy_orders', {
     order_number: {
         type: Sequelize.INTEGER,
         allowNull: false
+    },
+    type: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false
     }
 });
 

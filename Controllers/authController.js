@@ -34,7 +34,7 @@ exports.postRegister = (req, res, next) => {
     const phone_number = req.body.phone_number;
     const address = req.body.address;
     const gender = req.body.gender;
-    const role = req.body.role;
+    const role = 1;
     const image = req.file;
     const errors = validationResult(req);
     let imagePath = '';
@@ -79,7 +79,7 @@ exports.postRegister = (req, res, next) => {
                 })
                 .then(employeeRole => {
                     return res.status(200).json({
-                        message: 'Succeed',
+                        operation: 'Succeed',
                         employee: employee,
                         employeeRole: employeeRole
                     });
@@ -88,7 +88,7 @@ exports.postRegister = (req, res, next) => {
         .catch(err => {
             // if there where an error then delete the stored image
             deleteAfterMulter(image.path); 
-            return res.status(400).json({
+            return res.status(500).json({
                 operation: 'Failed',
                 message: err
             });            
@@ -106,7 +106,7 @@ exports.getRole = (req, res, next) => {
         });
     })
     .catch(err => {
-        return res.status(400).json({
+        return res.status(500).json({
             message: err
         });
     });
@@ -150,14 +150,13 @@ exports.postLogin = (req, res, next) => {
         .then(() => {
             return res.status(200).json({
                 operation: 'Succeed',
-                mail: 'Mail Sent',
-                employee: email
+                message: 'Mail Sent'
             })
         })
         .catch(err => {
-            return res.status(401).json({
+            return res.status(500).json({
                 operation: 'Failed',
-                message: err.meesage
+                message: err
             });
         });
     };
@@ -203,7 +202,7 @@ exports.postVerifyLoggin = (req, res, next) => {
         });
     })
     .catch(err => {
-        return res.status(401).json({
+        return res.status(500).json({
             operation: 'Failed',
             message: err.message
         })
@@ -219,7 +218,7 @@ exports.postResetPassword = (req, res, next) => {
     if(!errors.isEmpty())
         return res.status(401).json({
             operation: 'Failed',
-            message: errors.array()
+            message: errors.array()[0].msg
         });
         
     // find the employee with the given email
@@ -243,11 +242,11 @@ exports.postResetPassword = (req, res, next) => {
         .then(() => {
             return res.status(200).json({
                 operation: 'Succeed',
-                mail: 'Mail Sent'
+                message: 'Mail Sent'
             })
         })
         .catch(err => {
-            return res.status(400).json({
+            return res.status(500).json({
                 operation: 'Failed',
                 message: err.message
             });
@@ -283,15 +282,14 @@ exports.postVerifyRestPassword = (req, res, next) => {
         
         return employee.save();
     })
-    .then(employee => {
+    .then(() => {
         return res.status(200).json({
             operation: 'Succeed',
-            message: 'Code Submitted Successfully',
-            email: employee.email
+            message: 'Code Submitted Successfully'
         });
     })
     .catch(err => {
-        return res.status(401).json({
+        return res.status(500).json({
             operation: 'Failed',
             message: err.message
         });
@@ -340,7 +338,7 @@ exports.postNewPassword = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(401).json({
+            return res.status(500).json({
                 operation: 'Failed',
                 message: err
             })
@@ -373,7 +371,7 @@ exports.postLogout = (req, res, next) => {
             });
         })
         .catch(err => {
-            return res.status(401).json({
+            return res.status(500).json({
                 operation: 'Failed',
                 message: err
             });

@@ -18,6 +18,7 @@ const sequelize = require('./Util/database');
     const Role = require('./Models/AuthModels/Role');
     // Company Model
     const Company = require('./Models/CompaniesModels/CompanyModel');
+    const CompanyType = require('./Models/CompaniesModels/CompanyType');
     const CompanyProductItem = require('./Models/CompaniesModels/CompanyProductItemModel');
     const CompanyRawItem = require('./Models/CompaniesModels/CompanyRawItemModel');
     // Account Model
@@ -49,6 +50,7 @@ const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
 // Helper
     // for setting up the required data into the database
     const setupDataset = require('./Helper/setupDatabase/setupDatabase');
+const { CIDR } = require('sequelize');
 
 // middlware that parses the incoming request body as JSON
 app.use(bodyParser.json());
@@ -96,12 +98,15 @@ app.use('/api/company', companyRoute);
         Role.hasMany(EmployeeRole);
         EmployeeRole.belongsTo(Role);
     // Companies
+        // Companies <--- CompaniesTypes
+        CompanyType.hasMany(Company);
+        Company.belongsTo(CompanyType);
         // Companies ---> Accounts
-        Company.hasMany(Account);
+        Company.hasMany(Account, { onDelete: 'cascade' });
         Account.belongsTo(Company);
-    // Account ---> (Debt) <--- Buy_Orders
-        Account.belongsToMany(BuyOrder, { through: Debt, onDelete: 'cascade' });
-        BuyOrder.belongsToMany(Account, { through: Debt, onDelete: 'cascade' });
+        // Account ---> (Debt) <--- Buy_Orders
+        Account.belongsToMany(BuyOrder, { through: Debt, onDelete: 'cascade'});
+        BuyOrder.belongsToMany(Account, { through: Debt, onDelete: 'cascade'});
         Account.hasMany(Debt);
         Debt.belongsTo(Account);
         BuyOrder.hasMany(Debt);

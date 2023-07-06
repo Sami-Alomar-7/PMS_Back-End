@@ -16,11 +16,18 @@ const employeeController = require('../Controllers/employeeController');
 
 router.get('/profile', isAuth, employeeController.getEmployeeProfile);
 
-router.get('/display-employees', [
+router.get('/display-all', [
         isAuth,
         isAdmin
     ],
     employeeController.getAllEmployees
+);
+
+router.get('/display-specifice-employee', [
+        isAuth,
+        isAdmin
+    ],
+    employeeController.getSpecificeEmployee
 );
 
 router.post('/add-employee', [

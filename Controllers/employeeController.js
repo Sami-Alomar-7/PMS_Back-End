@@ -27,7 +27,10 @@ exports.getAllEmployees = (req, res, next) => {
 
     Employee.findAll({
         offset: (page-1) * EMPLOYEE_PER_REQUEST,
-        limit: EMPLOYEE_PER_REQUEST
+        limit: EMPLOYEE_PER_REQUEST,
+        attributes: {
+            exclude: ['password','token', 'token_expiration']
+        }
     })
     .then(employees => {
         return res.status(200).json({
@@ -43,12 +46,57 @@ exports.getAllEmployees = (req, res, next) => {
     })
 };
 
+exports.getSpecificeEmployee = (req, res, next) => {
+    const employeeId = req.body.employeeId;
+    
+    Employee.findOne({
+        where: {id: employeeId},
+        attributes: {
+            exclude: ['password', 'token', 'token_expiration']
+        },
+        include: {
+            model: Role,
+            attributes: ['name'],
+            through: {
+                model: EmployeeRole,
+                attributes: {
+                    exclude: ['id', 'employeeId', 'roleId']
+                }
+            }
+        }
+    })
+    .then(employee => {
+        return res.status(200).json({
+            operation: 'Succeed',
+            employee: employee
+        })
+    })
+    .catch(() => {
+        return res.status(404).json({
+            operation: 'Failed',
+            message: 'Employee Not Found'
+        })
+    })
+};
+
 exports.getEmployeeProfile = (req, res, next) => {
     const employeeId = req.employeeId;
 
     Employee.findOne({
-        where: { id: employeeId },
-        include: Role
+        where: {id: employeeId},
+        attributes: {
+            exclude: ['password', 'token', 'token_expiration']
+        },
+        include: {
+            model: Role,
+            attributes: ['name'],
+            through: {
+                model: EmployeeRole,
+                attributes: {
+                    exclude: ['id', 'employeeId', 'roleId']
+                }
+            }
+        }
     })
     .then(employee => {
         return res.status(200).json({
@@ -76,6 +124,7 @@ exports.postAddEmployee = (req, res, next) =>{
     const image = req.file;
     const errors = validationResult(req);
     let imagePath = '';
+    let employeeTemp;
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
@@ -84,7 +133,7 @@ exports.postAddEmployee = (req, res, next) =>{
             deleteAfterMulter(image.path);
         return res.status(401).json({
             operation: 'Failed',
-            message: errors.array()
+            message: errors.array()[0].msg
         });
     }
     
@@ -110,6 +159,7 @@ exports.postAddEmployee = (req, res, next) =>{
             return employee.save()
         })
         .then(employee => {
+            employeeTemp = employee;
             const employeeRole = new EmployeeRole({
                 employeeId: employee.id,
                 roleId: role,
@@ -120,14 +170,14 @@ exports.postAddEmployee = (req, res, next) =>{
         .then(employeeRole => {
             return res.status(200).json({
                 message: 'Succeed',
-                employee: employee,
+                employee: employeeTemp,
                 employeeRole: employeeRole
             });
         })
         .catch(err => {
             // if there where an error then delete the stored image
             deleteAfterMulter(image.path);
-            return res.status(400).json({
+            return res.status(500).json({
                 operation: 'Failed',
                 message: err
             });            
@@ -155,7 +205,7 @@ exports.putUpdateProfile = (req, res, next) => {
             deleteAfterMulter(updateImage.path);
         return res.status(401).json({
             operation: 'Failed',
-            message: errors.array()
+            message: errors.array()[0].msg
         });
     }
         

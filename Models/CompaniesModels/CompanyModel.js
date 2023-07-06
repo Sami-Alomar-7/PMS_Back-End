@@ -25,12 +25,6 @@ const Company = sequelize.define('companies', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    type: {
-        type: Sequelize.ENUM,
-        values: ['products','drugs','raws','productsAndDrugs','productsAndrows','drugsAndRaws','all'],
-        len: [1,20],
-        allowNull: false
-    }
 }, {
     timestamps: false
 });

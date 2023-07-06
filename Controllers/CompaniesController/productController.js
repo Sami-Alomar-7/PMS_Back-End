@@ -5,9 +5,13 @@ const Type = require('../../Models/ProductsModels/TypeModel');
 const Scince = require('../../Models/ProductsModels/ScinceModel');
 const CompanyProductItem = require('../../Models/CompaniesModels/CompanyProductItemModel');
 const Company = require('../../Models/CompaniesModels/CompanyModel');
+const CompanyType = require('../../Models/CompaniesModels/CompanyType');
 
 // using the .env file
 require('dotenv').config();
+
+// for cheking if there were any errors in the rqueset body
+const { validationResult } = require('express-validator');
 
 // number of products which wiil be sent with a single request
 const PRODUCTS_PER_REQUEST = 10;
@@ -19,15 +23,11 @@ exports.getAllProducts = (req, res, next) => {
     Product.findAll({ 
         offset: (page-1) * PRODUCTS_PER_REQUEST,
         limit: PRODUCTS_PER_REQUEST,
+        attributes: {
+            exclude: ['categoryId', 'typeId', 'scinceId']
+        },
         include: [
             {
-                model: Company,
-                attributes: ['name','image_url'],
-                through: {
-                    model: CompanyProductItem,
-                    attributes: ['price', 'expiration_date']
-                }
-            }, {
                 model: Category,
                 attributes: ['name']
             }, {
@@ -36,6 +36,12 @@ exports.getAllProducts = (req, res, next) => {
             }, {
                 model: Scince,
                 attributes: ['name']
+            }, {
+                model: Company,
+                attributes: ['name','image_url'],
+                through: {
+                    model: CompanyProductItem
+                }
             }
         ]
     })
@@ -56,22 +62,23 @@ exports.getAllProducts = (req, res, next) => {
 exports.getSpecificProduct = (req, res, next) => {
     // get the debt it from the request params
     const productId = req.body.productId;
+    const errors = validationResult(req);
 
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
     Product.findOne({
         where: {
             id: productId
         },
+        attributes: {
+            exclude: ['categoryId', 'typeId', 'scinceId']
+        },
         include: [
             {
-                model: Company,
-                attributes: ['name','image_url'],
-                through: {
-                    model: CompanyProductItem,
-                    attributes: {
-                        exclude: ['productId', 'companyId']
-                    }
-                }
-            }, {
                 model: Category,
                 attributes: ['name']
             }, {
@@ -80,6 +87,13 @@ exports.getSpecificProduct = (req, res, next) => {
             }, {
                 model: Scince,
                 attributes: ['name']
+            },
+            {
+                model: Company,
+                attributes: ['name','image_url'],
+                through: {
+                    model: CompanyProductItem
+                }
             }
         ]
     })
@@ -89,10 +103,10 @@ exports.getSpecificProduct = (req, res, next) => {
             product: product
         })
     })
-    .catch(() => {
-        return res.status(404).json({
+    .catch(err => {
+        return res.status(500).json({
             operation: 'Failed',
-            message: 'Product Not Found'
+            message: err
         })
     })
 };
@@ -102,34 +116,49 @@ exports.getSpecificCompanyProducts = (req, res, next) =>{
     const companyId = req.body.companyId;
     // get the page number if not then we are in the first one
     const page = req.query.page || 1;
+    const errors = validationResult(req);
 
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
     Company.findOne({
         offset: (page-1) * PRODUCTS_PER_REQUEST,
         limit: PRODUCTS_PER_REQUEST,
         where: {
             id: companyId
         },
-        include: {
-            model: Product,
-            through: {
-                model: CompanyProductItem,
+        attributes: {
+            exclude: ['companiesTypeId']
+        },
+        include: [
+            {
+                model: CompanyType,
+                attributes: ['name']
+            }, {
+                model: Product,
                 attributes: {
-                    exclude: ['productId', 'companyId']
-                }
-            },
-            include: [
-                {
-                    model: Category,
-                    attributes: ['name']
-                }, {
-                    model: Type,
-                    attributes: ['name']
-                }, {
-                    model: Scince,
-                    attributes: ['name']
-                }
-            ]
-        }
+                    exclude: ['categoryId', 'typeId', 'scinceId']
+                },
+                through: {
+                    model: CompanyProductItem
+                },
+                include: [
+                    {
+                        model: Category,
+                        attributes: ['name']
+                    }, {
+                        model: Type,
+                        attributes: ['name']
+                    }, {
+                        model: Scince,
+                        attributes: ['name']
+                    }
+                ]
+            }
+        ]
     })
     .then(company => {
         return res.status(200).json({
@@ -137,10 +166,10 @@ exports.getSpecificCompanyProducts = (req, res, next) =>{
             company: company
         })
     })
-    .catch(() => {
-        return res.status(404).json({
+    .catch(err => {
+        return res.status(500).json({
             operation: 'Failed',
-            message: 'Company Products Not Found'
+            message: err
         })
     });
 };
