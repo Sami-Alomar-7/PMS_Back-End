@@ -20,6 +20,8 @@ const companyController = require('../../Controllers/CompaniesController/company
     const accountRoute = require('../AccountsRoutes/AccountRoute');
     // The company Orders routes
     const orderRoute = require('../OrdersRoutes/BuyOrdersRoutes/orderRoute');
+    // The company Bills routes
+    const billRoutes = require('../BillsRoutes/BillRoute');
 
 router.get('/display-all', [
         isAuth,
@@ -73,5 +75,7 @@ router.use('/raw', rawRoute);
 router.use('/account', accountRoute);
 
 router.use('/order', orderRoute);
+
+router.use('/bill', billRoutes);
 
 module.exports = router;

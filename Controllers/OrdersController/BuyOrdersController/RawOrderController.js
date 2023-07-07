@@ -71,7 +71,7 @@ exports.postAddOrder = (req, res, next) => {
     // get the company id which the order will be associated to and the list of the chosed raws
     const companyId = req.body.companyId;
     const raws = req.body.raws;
-    let totalPrice = 0, lastOrderNumber = 1;
+    let totalPrice = 0, lastOrderNumber;
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
@@ -83,7 +83,7 @@ exports.postAddOrder = (req, res, next) => {
     BuyOrder.findOne({order: [['updatedAt', 'DESC']]})
         .then(order => {
             // get a new order number for the new order
-            lastOrderNumber = order.order_number;
+            lastOrderNumber = (order)? order.order_number : 0;
             // calculate the total price for the whole order
             raws.forEach(raw => {
                 totalPrice += raw.price * raw.quantity;

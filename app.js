@@ -13,21 +13,25 @@ const sequelize = require('./Util/database');
 
 // Models
     // Auth Model
-    const Employee = require('./Models/AuthModels/Employee');
-    const EmployeeRole = require('./Models/AuthModels/EmployeeRole');
-    const Role = require('./Models/AuthModels/Role');
+        const Employee = require('./Models/AuthModels/Employee');
+        const EmployeeRole = require('./Models/AuthModels/EmployeeRole');
+        const Role = require('./Models/AuthModels/Role');
     // Company Model
-    const Company = require('./Models/CompaniesModels/CompanyModel');
-    const CompanyType = require('./Models/CompaniesModels/CompanyType');
-    const CompanyProductItem = require('./Models/CompaniesModels/CompanyProductItemModel');
-    const CompanyRawItem = require('./Models/CompaniesModels/CompanyRawItemModel');
+        const Company = require('./Models/CompaniesModels/CompanyModel');
+        const CompanyType = require('./Models/CompaniesModels/CompanyType');
+        const CompanyProductItem = require('./Models/CompaniesModels/CompanyProductItemModel');
+        const CompanyRawItem = require('./Models/CompaniesModels/CompanyRawItemModel');
     // Account Model
-    const Account = require('./Models/AccountModels/AccountModel');
-    const Debt = require('./Models/AccountModels/DebtModel');
+        const Account = require('./Models/AccountModels/AccountModel');
+        const Debt = require('./Models/AccountModels/DebtModel');
     // Buy Order Model
-    const BuyOrder = require('./Models/OrdersModels/BuyOrderModels/BuyOrderModel');
-    const BuyOrderItem = require('./Models/OrdersModels/BuyOrderModels/BuyOrderItemsModel');
-    const BuyRawOrderItem = require('./Models/OrdersModels/BuyOrderModels/BuyRawOrderItemsMode');
+        const BuyOrder = require('./Models/OrdersModels/BuyOrderModels/BuyOrderModel');
+        const BuyOrderItem = require('./Models/OrdersModels/BuyOrderModels/BuyOrderItemsModel');
+        const BuyRawOrderItem = require('./Models/OrdersModels/BuyOrderModels/BuyRawOrderItemsMode');
+    // Bill Model
+        const Bill = require('./Models/BillsModels/BillModel');
+        const BillProductItem = require('./Models/BillsModels/BillProductItemModel');
+        const BillRawItem = require('./Models/BillsModels/BillRawItemModel');
     // Product Model
         const Product = require('./Models/ProductsModels/ProductModel');
         const Category = require('./Models/ProductsModels/CategoryModel');
@@ -39,19 +43,22 @@ const sequelize = require('./Util/database');
 
 
 // Routes
-const authRoute = require('./Routes/authRoute');
-const employeeRoute = require('./Routes/employeeRoutes');
-const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
-
+    const authRoute = require('./Routes/authRoute');
+    const employeeRoute = require('./Routes/employeeRoutes');
+    const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
+    
 // Middleware
     // Multer for file uploading 
     const multer = require('multer');
-
+    // Request Rate Limiter for managing throttling
+    const rateLimiter = require('express-rate-limit');
+    
 // Helper
     // for setting up the required data into the database
     const setupDataset = require('./Helper/setupDatabase/setupDatabase');
-const { CIDR } = require('sequelize');
-
+    // checking for the authorization to determine the appropriate request rate limit
+    const RateLimiterCheck = require('./Helper/RateLimiterCheck');
+    
 // middlware that parses the incoming request body as JSON
 app.use(bodyParser.json());
 
@@ -84,6 +91,22 @@ const imageFilter = (req, file, cb) => {
 const upload = multer({storage: imageStorage, fileFilter: imageFilter});
 app.use(upload.single('image'));
 
+// Limit the request rate bassed on the authoriztaion
+const authRateLimiter = rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: (req, res) => {
+        if(RateLimiterCheck(req, res))
+            return 100;
+        return 10;
+    },
+    message: 'Too many attempts from this IP, please try again after 15 minutes',
+    standardHeaders: true, 
+    legacyHeaders: false, 
+});
+
+// Applyed the api-request-limiter middleawre to protect the application from any type of 
+// fake requests or other brute force attacks
+app.use('/api', authRateLimiter);
 // Useing the Auth Routes
 app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
@@ -97,14 +120,14 @@ app.use('/api/company', companyRoute);
         EmployeeRole.belongsTo(Employee);
         Role.hasMany(EmployeeRole);
         EmployeeRole.belongsTo(Role);
-    // Companies
-        // Companies <--- CompaniesTypes
+// Companies
+    // Companies <--- CompaniesTypes
         CompanyType.hasMany(Company);
         Company.belongsTo(CompanyType);
-        // Companies ---> Accounts
+    // Companies ---> Accounts
         Company.hasMany(Account, { onDelete: 'cascade' });
         Account.belongsTo(Company);
-        // Account ---> (Debt) <--- Buy_Orders
+    // Account ---> (Debt) <--- Buy_Orders
         Account.belongsToMany(BuyOrder, { through: Debt, onDelete: 'cascade'});
         BuyOrder.belongsToMany(Account, { through: Debt, onDelete: 'cascade'});
         Account.hasMany(Debt);
@@ -114,6 +137,7 @@ app.use('/api/company', companyRoute);
     // Companies ---> BuyOrders
         Company.hasMany(BuyOrder);
         BuyOrder.belongsTo(Company);
+// Buy_Orders
     // Buy_Orders ---> (Buy_Orders_Items) <--- Company_Product_Items
         BuyOrder.belongsToMany(CompanyProductItem, { through: BuyOrderItem, onDelete: 'cascade' });
         CompanyProductItem.belongsToMany(BuyOrder, { through: BuyOrderItem });
@@ -128,6 +152,24 @@ app.use('/api/company', companyRoute);
         BuyRawOrderItem.belongsTo(BuyOrder);
         CompanyRawItem.hasMany(BuyRawOrderItem);
         BuyRawOrderItem.belongsTo(CompanyRawItem);
+// Bills
+    // Buy_Orders ---> Bills
+        BuyOrder.hasMany(Bill, { onDelete: 'cascade' });
+        Bill.belongsTo(BuyOrder);
+    // Bills ---> (Bill_Products_Items) <--- Buy_Orders_Items
+        Bill.belongsToMany(BuyOrderItem, { through: BillProductItem, onDelete: 'cascade' });
+        BuyOrderItem.belongsToMany(Bill, { through: BillProductItem, onDelete: 'cascade' });
+        Bill.hasMany(BillProductItem);
+        BillProductItem.belongsTo(Bill);
+        BuyOrderItem.hasMany(BillProductItem);
+        BillProductItem.belongsTo(BuyOrderItem);
+    // Bills ---> (Bill_Raws_Items) <--- Buy_Raw_Orders_Items
+        Bill.belongsToMany(BuyRawOrderItem, { through: BillRawItem, onDelete: 'cascade' });
+        BuyRawOrderItem.belongsToMany(Bill, { through: BillRawItem, onDelete: 'cascade' });
+        Bill.hasMany(BillRawItem);
+        BillRawItem.belongsTo(Bill);
+        BuyRawOrderItem.hasMany(BillRawItem);
+        BillRawItem.belongsTo(BuyRawOrderItem);
 // Products
     // Categories ---> Products
         Category.hasMany(Product);
