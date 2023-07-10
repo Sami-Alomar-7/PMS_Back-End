@@ -52,6 +52,10 @@ const sequelize = require('./Util/database');
     const multer = require('multer');
     // Request Rate Limiter for managing throttling
     const rateLimiter = require('express-rate-limit');
+    // Hemlmet for managing the HTTP headers
+    const helmet = require('helmet');
+    // Permissions-Policy is a fork of helmet for adding the Permission-Policy header and manage it
+    const permissionsPolicy = require('permissions-policy')
     
 // Helper
     // for setting up the required data into the database
@@ -104,9 +108,26 @@ const authRateLimiter = rateLimiter({
     legacyHeaders: false, 
 });
 
-// Applyed the api-request-limiter middleawre to protect the application from any type of 
-// fake requests or other brute force attacks
-app.use('/api', authRateLimiter);
+// using middlewares for improving the security
+app.use('/api',[
+    // Applyed the helmet Middleware for improve the security by setting HTTP headers and prevent some
+    helmet({
+        strictTransportSecurity: {
+            maxAge: 31536000,
+        }
+    }),
+    // Applyed the permission-policy header to prevent any potential abuse or misuse
+    permissionsPolicy({
+        features: {
+            geolocation: ['none'],
+            camera: ['none'], 
+            microphone: ['none']
+        }
+    }),
+    // Applyed the api-request-limiter middleawre to protect the application from any type of 
+    // fake requests or other brute force attacks
+    authRateLimiter
+]);
 // Useing the Auth Routes
 app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);

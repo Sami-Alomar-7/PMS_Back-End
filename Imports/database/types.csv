@@ -1,0 +1,6 @@
+id,name,image_url
+1,pills,data\default_images\type\pills.jpg
+2,liquid,data\default_images\type\liquid.png
+3,needle,data\default_images\type\needle.png
+4,ointment,data\default_images\type\ointment.png
+5,drop,data\default_images\type\drop.png

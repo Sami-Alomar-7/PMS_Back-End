@@ -1,0 +1,6 @@
+id,name,image_url
+1,pain-killer,data\default_images\product_category\pain_killer.png
+2,antibiotic,data\default_images\product_category\antibiotic.png
+3,cardiac,data\default_images\product_category\cardiac.png
+4,respiratory,data\default_images\product_category\respiratory.png
+5,antidepressants,data\default_images\product_category\antidepressant.png

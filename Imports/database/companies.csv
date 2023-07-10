@@ -1,0 +1,6 @@
+id,name,email,phone_number,location,companiesTypeId,image_url
+1,pfizer,pfizer.comp@gmail.com,1198345238,USA,1,data\default_images\company\pfizer.png
+2,novartis,novartis.comp@gmail.com,8897542323,Germane,5,data\default_images\company\novartis.png
+3,johnson&johnson,johnson.and.johnson.comp@gmail.com,3325256657,UK,7,data\default_images\company\johnson&johnson.png
+4,roche,roche.comp@gmail.com,1123445676,USA,5,data\default_images\company\roche.png
+5,sanofi,sanofi.comp@gmail.com,5589789678,Netherlands,1,data\default_images\company\sanofi.png

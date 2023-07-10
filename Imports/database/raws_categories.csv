@@ -1,0 +1,4 @@
+id,name,image_url
+1,chemical,data\default_images\rawCategory\chemical.png
+2,natural,data\default_images\rawCategory\natural.png
+3,pakaging_material,data\default_images\rawCategory\pakaging_material.png
