@@ -40,13 +40,18 @@ const sequelize = require('./Util/database');
     // Raw Model
         const Raw = require('./Models/RawsModels/RawModel');
         const RawCategory = require('./Models/RawsModels/CategoryModel');
+    // Laboratory Model
+        const Laboratory = require('./Models/LaboratoriesModels/LaboratoryModel');
+        const LaboratoryOrder = require('./Models/LaboratoriesModels/OrderMode');
+        const LaboratoryRaw = require('./Models/LaboratoriesModels/LaboratoryRawModel');
 
 
 // Routes
     const authRoute = require('./Routes/authRoute');
     const employeeRoute = require('./Routes/employeeRoutes');
     const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
-    
+    const laboratoryRoute = require('./Routes/LaboratoriesRoutes/LaboratoryRoute');
+
 // Middleware
     // Multer for file uploading 
     const multer = require('multer');
@@ -62,7 +67,7 @@ const sequelize = require('./Util/database');
     const setupDataset = require('./Helper/setupDatabase/setupDatabase');
     // checking for the authorization to determine the appropriate request rate limit
     const RateLimiterCheck = require('./Helper/RateLimiterCheck');
-    
+
 // middlware that parses the incoming request body as JSON
 app.use(bodyParser.json());
 
@@ -132,6 +137,7 @@ app.use('/api',[
 app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/company', companyRoute);
+app.use('/api/laboratory', laboratoryRoute);
 
 // Defines the models and its associations
     // Employees ---> (Employee_Roles) <--- Roles
@@ -191,6 +197,12 @@ app.use('/api/company', companyRoute);
         BillRawItem.belongsTo(Bill);
         BuyRawOrderItem.hasMany(BillRawItem);
         BillRawItem.belongsTo(BuyRawOrderItem);
+    // Laboratories ---> Laboratory_Orders
+        Laboratory.hasMany(LaboratoryOrder);
+        LaboratoryOrder.belongsTo(Laboratory);
+    // Bill_Raws_Items --- Laboratory_Raws
+        BillRawItem.hasOne(LaboratoryRaw);
+        LaboratoryRaw.belongsTo(BillRawItem);
 // Products
     // Categories ---> Products
         Category.hasMany(Product);

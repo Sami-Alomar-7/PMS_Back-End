@@ -32,6 +32,8 @@ module.exports = (req, res, next) => {
             message: 'Not Authenticated'
         });
 
+    // set the role id to the request body
+    req.roleId = decodedToken.role;
     // to determine that the token is indeed the current token which the employee use
     Employee.findOne({where: {token: token}})
         .then(employee => {

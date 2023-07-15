@@ -177,6 +177,10 @@ exports.postVerifyLoggin = (req, res, next) => {
             token_expiration: {
                 [Op.gt]: Date.now()
             }
+        },
+        include: {
+            model: EmployeeRole,
+            attributes: ['roleId']
         }
     })
     .then(employee => {

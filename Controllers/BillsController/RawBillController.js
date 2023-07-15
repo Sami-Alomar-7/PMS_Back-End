@@ -7,6 +7,7 @@ const BillRawItem = require('../../Models/BillsModels/BillRawItemModel');
 const BuyRawOrderItem = require('../../Models/OrdersModels/BuyOrderModels/BuyRawOrderItemsMode');
 const CompanyRawItem = require('../../Models/CompaniesModels/CompanyRawItemModel');
 const Raw = require('../../Models/RawsModels/RawModel');
+const LaboratoryRaw = require('../../Models/LaboratoriesModels/LaboratoryRawModel');
 
 // using the .env file
 require('dotenv').config();
@@ -120,6 +121,13 @@ exports.postAddBill = (req, res, next) => {
                     price: raw.price,
                     expiration_date: raw.expiration_date
                 })
+                .then(newRaw => {
+                    // add and save each raw from the bill to the laboratory stock                
+                    LaboratoryRaw.create({
+                        billRawsItemId: newRaw.id,
+                        quantity: newRaw.quantity
+                    })
+                })
             })
         })
         .then(() => {
@@ -170,6 +178,19 @@ exports.putEditOrder = (req, res, next) => {
                     })
                     .catch(err => {
                         throw new Error('Failed Editing the Bill_Raw_Item quantities cause of:\n' + err.message);
+                    })
+            })
+        })
+        .then(() => {
+            // travers on all the given raws in the laboratory and update the quantity of them if it has been modified
+            raws.forEach(raw => {
+                return LaboratoryRaw.findOne({where: {billRawItemId: raw.id}})
+                    .then(laboratoryRaw => {
+                        laboratoryRaw.quantity = raw.quantity;
+                        return laboratoryRaw.save();
+                    })
+                    .catch(err => {
+                        throw new Error('Failed Editing the Laboratory_Raws quantities cause of:\n' + err.message);
                     })
             })
         })

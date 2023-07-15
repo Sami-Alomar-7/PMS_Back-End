@@ -5,12 +5,12 @@ module.exports = (req, res, next) => {
             message: 'Not Authorized'
         });
 
-    if(req.roleId !== 1)
+    if(req.roleId !== 1 && req.roleId !== 3)
         return res.status(401).json({
             operation: 'Failed',
-            message: 'Not Authorized As An Admin'
+            message: 'Not Authorized As An Admin Or A Laboratory Worker'
         });
     
-    if(req.roleId === 1)
+    if(req.roleId === 1 || req.roleId === 3)
         next();
 };

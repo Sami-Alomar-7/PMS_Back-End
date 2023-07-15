@@ -10,7 +10,9 @@ const { validationResult } = require('express-validator');
 
 // Helper
     // for the requests which failes not to fill the storage with unwanted files
-    const deleteAfterMulter = require('../../Helper/deleteAfterMulter');
+        const deleteAfterMulter = require('../../Helper/deleteAfterMulter');
+    // for detecting if the image was the default one
+        const isDefaultImage = require('../../Helper/isDefaultImage');
 
 // number of companies which wiil be sent with a single request
 const COMPANIES_PER_REQUEST = 10;
@@ -125,8 +127,9 @@ exports.deleteCompany = (req, res, next) => {
     
     Company.findOne({where: {id: companyId}})
     .then(company => {
-        // delete the company image
-        deleteAfterMulter(company.image_url);
+        // delete the company image if it wasn't the default
+        if(!isDefaultImage(company.image_url))
+            deleteAfterMulter(company.image_url);
 
         return Company.destroy({where: {id: company.id}})
     })

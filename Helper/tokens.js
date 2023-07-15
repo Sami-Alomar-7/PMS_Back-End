@@ -14,6 +14,7 @@ exports.generat = (employee) => {
             email: employee.email, 
             statu: employee.statu,
             date: timestamp,
+            role: employee.employee_roles[0].roleId
         },
         secret, {
             expiresIn: '1h'
