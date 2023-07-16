@@ -19,6 +19,8 @@ const laboratoryController = require('../../Controllers/LaboratoriesController/L
         const laboratoryRaw = require('./RawRoute');
     // the laboratory orders routes
         const laboratoryOrder = require('./OrderRoute');
+    // the laboratory products routes
+        const laboratoryProduct = require('./ProductRoute');
 
 router.get('/display-all', [
         isAuth,
@@ -112,5 +114,7 @@ router.delete('/delete-laboratory', [
 router.use('/raw', laboratoryRaw);
 
 router.use('/order', laboratoryOrder);
+
+router.use('/product', laboratoryProduct);
 
 module.exports = router;

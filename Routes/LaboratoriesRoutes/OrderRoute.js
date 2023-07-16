@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Models
-const Order = require('../../Models/LaboratoriesModels/OrderMode');
+const Order = require('../../Models/LaboratoriesModels/LaboratoryOrderMode');
 const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 
 // Required Middleware
@@ -22,8 +22,10 @@ router.get('/display-all', [
     orderController.getAllOrders
 );
 
-router.get('/get-specifice-order',[
+router.get('/display-order',[
         check('orderId')
+            .exists()
+            .withMessage('No orderId had been provided')
             .custom(value => {
                 return Order.findOne({where: {id: value}})
                     .then(order => {
@@ -38,8 +40,10 @@ router.get('/get-specifice-order',[
     orderController.getSpecificeOrder
 );
 
-router.get('/get-specifice-laboratory-orders',[
+router.get('/display-laboratory-orders',[
         check('laboratoryId')
+            .exists()
+            .withMessage('No laboratoryId had been provided')
             .custom(value => {
                 return Laboratory.findOne({where: {id: value}})
                     .then(laboratory => {
@@ -51,12 +55,68 @@ router.get('/get-specifice-laboratory-orders',[
         isAuth,
         isAdminOrLaboratoryWorker
     ], 
-    orderController.getSpecificeOrder
+    orderController.getSpecificeLaboratoryOrders
+);
+
+router.post('/accept-order', [
+        check('orderId')
+            .exists()
+            .withMessage('No orderId had been provided')
+            .custom(value => {
+                return Order.findOne({where: {id: value}})
+                    .then(order => {
+                        if(!order)
+                            return Promise.reject('Couldn\'t find the specified order');
+                    })
+            })
+    ], [
+        isAuth,
+        isAdminOrLaboratoryWorker
+    ], 
+    orderController.postAcceptOrder
+);
+
+router.post('/reject-order', [
+        check('orderId')
+            .exists()
+            .withMessage('No orderId had been provided')
+            .custom(value => {
+                return Order.findOne({where: {id: value}})
+                    .then(order => {
+                        if(!order)
+                            return Promise.reject('Couldn\'t find the specified order');
+                    })
+            })
+    ], [
+        isAuth,
+        isAdminOrLaboratoryWorker
+    ], 
+    orderController.postRejectOrder
+);
+
+router.post('/ready-order', [
+        check('orderId')
+            .exists()
+            .withMessage('No orderId had been provided')
+            .custom(value => {
+                return Order.findOne({where: {id: value}})
+                    .then(order => {
+                        if(!order)
+                            return Promise.reject('Couldn\'t find the specified order');
+                    })
+            })
+    ], [
+        isAuth,
+        isAdminOrLaboratoryWorker
+    ], 
+    orderController.postReadyOrder
 );
 
 router.post('/add-order', [
         // checking the incoming data from the request
         check('laboratoryId')
+            .exists()
+            .withMessage('No laboratoryId had been provided')
             .custom(value => {
                 return Laboratory.findOne({where: {id: value}})
                     .then(laboratory => {
@@ -65,16 +125,13 @@ router.post('/add-order', [
                     })
             }),
         check('title')
-            .isEmail()
+            .isString()
             .trim(),
         check('description')
             .isString()
             .trim(),
         check('usage')
             .isString()
-            .trim(),
-        check('quantity')
-            .isInt()
             .trim()
     ], [
         isAuth,
@@ -86,6 +143,8 @@ router.post('/add-order', [
 router.put('/update-order', [
         // checking the incoming data from the request
         check('orderId')
+            .exists()
+            .withMessage('No orderId had been provided')
             .custom(value => {
                 return Order.findOne({where: {id: value}})
                     .then(order => {
@@ -94,15 +153,12 @@ router.put('/update-order', [
                     })
             }),
         check('title')
-            .isEmail()
+            .isString()
             .trim(),
         check('description')
             .isString()
             .trim(),
         check('usage')
-            .isString()
-            .trim(),
-        check('quantity')
             .isString()
             .trim()
     ], [
@@ -114,6 +170,8 @@ router.put('/update-order', [
 
 router.delete('/delete-order', [
         check('orderId')
+            .exists()
+            .withMessage('No orderId had been provided')
             .custom(value => {
                 return Order.findOne({where: {id: value}})
                     .then(order => {

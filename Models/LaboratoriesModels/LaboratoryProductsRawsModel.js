@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const LaboratoryRaw = sequelize.define('lab_raws', {
+const LaboratoryProductRaws = sequelize.define('lab_products_raws', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -11,9 +11,13 @@ const LaboratoryRaw = sequelize.define('lab_raws', {
     quantity: {
         type: Sequelize.INTEGER,
         allowNull: false
+    },
+    price: {
+        type: Sequelize.FLOAT,
+        allowNull: false
     }
 }, {
     timestamps: false
 });
 
-module.exports = LaboratoryRaw;
+module.exports = LaboratoryProductRaws;

@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const Order = sequelize.define('laboratory_orders', {
+const Order = sequelize.define('lab_orders', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -26,11 +26,15 @@ const Order = sequelize.define('laboratory_orders', {
     },
     statu: {
         type: Sequelize.ENUM,
-        values: ['Accepted', 'Rejected', 'Waiting'],
+        values: ['Waiting', 'Accepted','Rejected', 'Ready'],
         default: 'Waiting'
+    },
+    order_number: {
+        type: Sequelize.INTEGER,
+        allowNull: false
     }
 }, {
-    timestamps: false
+    timestamps: true
 });
 
 module.exports = Order;

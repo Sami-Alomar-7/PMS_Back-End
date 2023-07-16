@@ -135,11 +135,12 @@ exports.putUpdateLaboratory = (req, res, next) => {
     // get the Laboratory and update its data
     Laboratory.findOne({where: {id: laboratoryId}})
         .then(laboratory => {
-            if(updateImage){
-                // remove the old image if it was updated
-                deleteAfterMulter(laboratory.image_url);
-                laboratory.image_url = updateImage.path;
-            }
+            if(updateImage)
+                if(!isDefaultImage(laboratory.image_url)){
+                    // remove the old image if it was updated
+                    deleteAfterMulter(laboratory.image_url);
+                    laboratory.image_url = updateImage.path;
+                }
             
             laboratory.name = updatedName;
             laboratory.email = updatedEmail;

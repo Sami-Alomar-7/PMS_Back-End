@@ -42,9 +42,10 @@ const sequelize = require('./Util/database');
         const RawCategory = require('./Models/RawsModels/CategoryModel');
     // Laboratory Model
         const Laboratory = require('./Models/LaboratoriesModels/LaboratoryModel');
-        const LaboratoryOrder = require('./Models/LaboratoriesModels/OrderMode');
+        const LaboratoryOrder = require('./Models/LaboratoriesModels/LaboratoryOrderMode');
         const LaboratoryRaw = require('./Models/LaboratoriesModels/LaboratoryRawModel');
-
+        const LaboratoryProduct = require('./Models/LaboratoriesModels/LaboratoryProductModel');
+        const LaboratoryProductRaw = require('./Models/LaboratoriesModels/LaboratoryProductsRawsModel');
 
 // Routes
     const authRoute = require('./Routes/authRoute');
@@ -102,13 +103,13 @@ app.use(upload.single('image'));
 
 // Limit the request rate bassed on the authoriztaion
 const authRateLimiter = rateLimiter({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 10 * 60 * 1000,
     max: (req, res) => {
         if(RateLimiterCheck(req, res))
             return 100;
         return 10;
     },
-    message: 'Too many attempts from this IP, please try again after 15 minutes',
+    message: 'Too many attempts from this IP, please try again after 10 minutes',
     standardHeaders: true, 
     legacyHeaders: false, 
 });
@@ -203,6 +204,16 @@ app.use('/api/laboratory', laboratoryRoute);
     // Bill_Raws_Items --- Laboratory_Raws
         BillRawItem.hasOne(LaboratoryRaw);
         LaboratoryRaw.belongsTo(BillRawItem);
+    // Laboratory_Orders ---> Laboratory_Products
+        LaboratoryOrder.hasMany(LaboratoryProduct);
+        LaboratoryProduct.belongsTo(LaboratoryOrder);
+    // Laboratory_Products ---> (Laboratory_Products_Raws) <--- Laboratory_Raws
+        LaboratoryProduct.belongsToMany(LaboratoryRaw, { through: LaboratoryProductRaw, onDelete: 'cascade'});
+        LaboratoryRaw.belongsToMany(LaboratoryProduct, { through: LaboratoryProductRaw });
+        LaboratoryProduct.hasMany(LaboratoryProductRaw, { onDelete: 'cascade' });
+        LaboratoryProductRaw.belongsTo(LaboratoryProduct);
+        LaboratoryRaw.hasMany(LaboratoryProductRaw);
+        LaboratoryProductRaw.belongsTo(LaboratoryRaw);
 // Products
     // Categories ---> Products
         Category.hasMany(Product);

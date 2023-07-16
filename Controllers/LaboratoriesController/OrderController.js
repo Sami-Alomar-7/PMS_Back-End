@@ -1,5 +1,5 @@
 // Models 
-const Order = require('../../Models/LaboratoriesModels/OrderMode');
+const Order = require('../../Models/LaboratoriesModels/LaboratoryOrderMode');
 const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 
 // using the .env file
@@ -30,10 +30,10 @@ exports.getAllOrders = (req, res, next) => {
             orders: orders
         })
     })
-    .catch(() => {
-        return res.status(404).json({
+    .catch(err => {
+        return res.status(500).json({
             operation: 'Failed',
-            message: 'Orders Not Found'
+            message: err.message
         })
     })
 };
@@ -70,7 +70,7 @@ exports.getSpecificeOrder = (req, res, next) => {
 };
 
 exports.getSpecificeLaboratoryOrders = (req, res, next) => {
-    const laboratoryId = req.body.LaboratoryId;
+    const laboratoryId = req.body.laboratoryId;
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
@@ -100,13 +100,8 @@ exports.getSpecificeLaboratoryOrders = (req, res, next) => {
     })
 }
 
-exports.postAddOrder = (req, res, next) => {
-    const laboratoryId = req.body.LaboratoryId;
-    const title = req.body.title;
-    const description = req.body.description;
-    const usage = req.body.usage;
-    const quantity = req.body.quantity;
-    const statu = req.body.statu;
+exports.postAcceptOrder = (req, res, next) => {
+    const orderId = req.body.orderId;
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
@@ -115,17 +110,125 @@ exports.postAddOrder = (req, res, next) => {
             message: errors.array()[0].msg
         });
     
-    // create a new object to insert a new record with the incming data
-    const order = new Order({
-        title: title,
-        description: description,
-        usage: usage,
-        quantity: quantity,
-        statu: statu,
-        laboratoryId: laboratoryId
-    });
+    Order.findOne({where: {id: orderId}})
+        .then(order => {
+            if(order.statu !== 'Waiting')
+                throw new Error('The Order is Not on state which allowes you to Accept it');
+            
+            order.statu = 'Accepted'
+            return order.save();
+        })
+        .then(order => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                order: order
+            })
+        })
+        .catch(err => {
+            return res.status(500).json({
+                operation: 'Failed',
+                message: err.message
+            })
+        })
+}
 
-    order.save()
+exports.postRejectOrder = (req, res, next) => {
+    const orderId = req.body.orderId;
+    const errors = validationResult(req);
+    
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
+    Order.findOne({where: {id: orderId}})
+        .then(order => {
+            if(order.statu !== 'Waiting')
+                throw new Error('The Order is Not on state which allowes you to Reject it');
+            
+            order.statu = 'Rejected'
+            return order.save();
+        })
+        .then(order => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                order: order
+            })
+        })
+        .catch(err => {
+            return res.status(500).json({
+                operation: 'Failed',
+                message: err.message
+            })
+        })
+}
+
+exports.postReadyOrder = (req, res, next) => {
+    const orderId = req.body.orderId;
+    const errors = validationResult(req);
+    
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0].msg
+        });
+    
+    Order.findOne({where: {id: orderId}})
+        .then(order => {
+            if(order.statu !== 'Accepted')
+                throw new Error('The Order is Not on a state which allowes you to put it Ready');
+            
+            order.statu = 'Ready'
+            return order.save();
+        })
+        .then(order => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                order: order
+            })
+        })
+        .catch(err => {
+            return res.status(500).json({
+                operation: 'Failed',
+                message: err.message
+            })
+        })
+}
+
+exports.postAddOrder = (req, res, next) => {
+    const laboratoryId = req.body.laboratoryId;
+    const title = req.body.title;
+    const description = req.body.description;
+    const usage = req.body.usage;
+    const quantity = req.body.quantity;
+    const statu = 'Waiting';
+    const errors = validationResult(req);
+    let lastOrderNumber;
+
+    if(!errors.isEmpty())
+        return res.status(400).json({
+            operation: 'Failed',
+            message: errors.array()[0]
+        });
+    
+    Order.findOne({order: [['updatedAt', 'DESC']]})
+        .then(order => {
+            // get a new order number for the new order
+            lastOrderNumber = (order)? order.order_number : 0;
+            // create a new object to insert a new record with the incming data
+            const newOrder = new Order({
+                laboratoryId: laboratoryId,
+                title: title,
+                description: description,
+                usage: usage,
+                quantity: quantity,
+                statu: statu,
+                order_number: ++lastOrderNumber
+            });
+        
+            return newOrder.save();    
+        })
         .then(order => {
             return res.status(200).json({
                 operation: 'Succeed',

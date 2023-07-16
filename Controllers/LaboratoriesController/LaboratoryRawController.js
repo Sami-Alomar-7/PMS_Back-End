@@ -9,21 +9,11 @@ const RowCategory = require('../../Models/RawsModels/CategoryModel');
 // using the .env file
 require('dotenv').config();
 
-// for cheking if there were any errors in the rqueset body
-const { validationResult } = require('express-validator');
-
 // number of laboratory raws which wiil be sent with a single request
     const LABORATORY_RAWS_PER_REQUEST = 10;
 
 exports.getLaboratoryRaws = (req, res, next) => {
     const page = req.query.page || 1;
-    const errors = validationResult(req);
-
-    if(!errors.isEmpty())
-        return res.status(401).json({
-            operation: 'Failed',
-            message: errors.array()[0].msg
-        });
 
     LaboratoryRaw.findAll({
         offset: (page-1) * LABORATORY_RAWS_PER_REQUEST,
