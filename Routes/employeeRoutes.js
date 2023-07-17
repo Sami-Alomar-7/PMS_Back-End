@@ -24,6 +24,17 @@ router.get('/display-all', [
 );
 
 router.get('/display-specifice-employee', [
+        check('employeeId')
+            .exists()
+            .withMessage('No emplyeeId had been provided')
+            .custom(value => {
+                return Employee.findOne({where: {id: value}})
+                    .then(employee => {
+                        if(!employee)
+                            return Promise.reject('No such employee registered')
+                    })
+            })
+    ], [
         isAuth,
         isAdmin
     ],
@@ -35,6 +46,8 @@ router.post('/add-employee', [
         check('email')
             .isEmail()
             .withMessage('Please Enter A Valid E-mail')
+            .exists()
+            .withMessage('No Email had been provided')
             .normalizeEmail()
             .custom(value => {
                 return Employee.findOne({where: {email: value}})
@@ -77,7 +90,15 @@ router.put('/update-employee', [
         // checking the incoming data from the request
         check('email')
             .isEmail()
-            .withMessage('Please Enter A Valid E-mail'),
+            .withMessage('Please Enter A Valid E-mail')
+            .normalizeEmail()
+            .custom(value => {
+                return Employee.findOne({where: {email: value}})
+                    .then(employee => {
+                        if(employee)
+                            return Promise.reject('E-Mail Is Already Exists, Please Pick A Different One');
+                    })
+            }),
         check('password')
             .isLength({min: 8})
             .withMessage('your password is too short, 8 charectar required')
@@ -102,6 +123,17 @@ router.put('/update-employee', [
 );
 
 router.delete('/delete-employee', [
+        check('employeeId')
+            .exists()
+            .withMessage('No employeeId had been provided')
+            .custom(value => {
+                return Employee.findOne({where: {id: value}})
+                    .then(employee => {
+                        if(!employee)
+                            return Promise.reject('There is no such employee registered');
+                    })
+            })
+    ], [
         isAuth,
         isAdmin
     ],

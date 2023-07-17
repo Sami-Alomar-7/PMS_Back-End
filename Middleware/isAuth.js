@@ -8,8 +8,8 @@ module.exports = (req, res, next) => {
     // make sure the header has an authorization field
     const authHeader = req.get('Authorization');
     if(!authHeader)
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 401,
             message: 'Not Authenticated'
         })
     
@@ -20,17 +20,17 @@ module.exports = (req, res, next) => {
         // get the data from the token by decoding it
         decodedToken = jwt.verify(token, process.env.JWT_SECRETE_KEY);
     } catch(err) {
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 401,
             message: 'Not Authorized, This Token Isn\'t Valid'
-        });
+        })
     }
-    
+
     if(!decodedToken)
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 401,
             message: 'Not Authenticated'
-        });
+        })
 
     // set the role id to the request body
     req.roleId = decodedToken.role;
@@ -43,8 +43,8 @@ module.exports = (req, res, next) => {
             next();
         })
         .catch(() => {
-            return res.status(401).json({
-                operation: 'Failed',
+            return next({
+                status: 401,
                 message: 'Not Authorized, This Token Isn\'t Valid'
             })
         })

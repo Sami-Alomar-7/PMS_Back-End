@@ -17,6 +17,7 @@ const bcrypt = require('bcryptjs');
     const deleteAfterMulter = require('../Helper/deleteAfterMulter');
     // for the files reaching
     const path = require('path');
+const isDefaultImage = require('../Helper/isDefaultImage');
 
 // number of employees which wiil be sent with a single request
 const EMPLOYEE_PER_REQUEST = 4;
@@ -39,16 +40,23 @@ exports.getAllEmployees = (req, res, next) => {
         })
     })
     .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Employee Not Found'
-        })
+        next({
+            status: 500, 
+            message: err.message
+        });
     })
 };
 
 exports.getSpecificeEmployee = (req, res, next) => {
     const employeeId = req.body.employeeId;
-    
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return next({
+            status: 400, 
+            message: errors.array()[0].msg
+        });
+
     Employee.findOne({
         where: {id: employeeId},
         attributes: {
@@ -72,9 +80,9 @@ exports.getSpecificeEmployee = (req, res, next) => {
         })
     })
     .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Employee Not Found'
+        next({
+            status: 500, 
+            message: err.message
         })
     })
 };
@@ -105,9 +113,9 @@ exports.getEmployeeProfile = (req, res, next) => {
         })
     })
     .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Employee Not Found'
+        next({
+            status: 500, 
+            message: err.message
         })
     })
 };
@@ -128,13 +136,14 @@ exports.postAddEmployee = (req, res, next) =>{
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(image)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(image.path);
-        return res.status(401).json({
-            operation: 'Failed',
+            if(!isDefaultImage(image.path))
+                deleteAfterMulter(image.path);
+        return next({
+            status: 400, 
             message: errors.array()[0].msg
-        });
+        })
     }
     
     // if there were no image uploaded set the default image
@@ -176,11 +185,13 @@ exports.postAddEmployee = (req, res, next) =>{
         })
         .catch(err => {
             // if there where an error then delete the stored image
-            deleteAfterMulter(image.path);
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
-            });            
+            if(image)
+                if(!isDefaultImage(image.path))
+                    deleteAfterMulter(image.path);
+            next({
+                status: 500, 
+                message: err.message
+            })
         })
 };
 
@@ -200,13 +211,14 @@ exports.putUpdateProfile = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(updateImage)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(updateImage.path);
-        return res.status(401).json({
-            operation: 'Failed',
+            if(!isDefaultImage(updateImage.path))
+                deleteAfterMulter(updateImage.path);
+        return next({
+            status: 400, 
             message: errors.array()[0].msg
-        });
+        })
     }
         
     // get the employee and update his data
@@ -218,9 +230,10 @@ exports.putUpdateProfile = (req, res, next) => {
         return bcrypt.hash(updatedPassword, 12);
     })
     .then(hashedPassword => {
+        // remove the old image if it was updated
         if(updateImage){
-            // remove the old image if it was updated
-            deleteAfterMulter(tempEmployee.image_url);
+            if(!isDefaultImage(tempEmployee.path))
+                deleteAfterMulter(tempEmployee.image_url);
             tempEmployee.image_url = updateImage.path;
         }
         
@@ -251,18 +264,26 @@ exports.putUpdateProfile = (req, res, next) => {
         })
     })
     .catch(() => {
+        // if there where an error then delete the stored image
         if(updateImage)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(updateImage.path);
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Employee Not Found'
-        });
+            if(!isDefaultImage(updateImage.path))
+                deleteAfterMulter(updateImage.path);
+        next({
+            status: 500, 
+            message: err.message
+        })
     });
 };
 
 exports.deleteEmployee = (req, res, next) => {
     const employeeId = req.body.employeeId;
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
 
     Employee.findOne({where: {id: employeeId}})
         .then(employee => {
@@ -278,9 +299,9 @@ exports.deleteEmployee = (req, res, next) => {
             })
         })
         .catch(() => {
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Employee Not Found'
-            });
-        });
+            next({
+                status: 500,
+                message: err.message
+            })
+        })
 };

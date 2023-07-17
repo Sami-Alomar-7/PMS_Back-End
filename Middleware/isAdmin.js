@@ -1,15 +1,15 @@
 module.exports = (req, res, next) => {
     if(!req.roleId)
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 401,
             message: 'Not Authorized'
-        });
+        })
 
     if(req.roleId !== 1)
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 401,
             message: 'Not Authorized As An Admin'
-        });
+        })
     
     if(req.roleId === 1)
         next();

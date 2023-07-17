@@ -3,7 +3,6 @@ const router = express.Router();
 
 // Models
 const Order = require('../../Models/LaboratoriesModels/LaboratoryOrderMode');
-const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
@@ -87,7 +86,14 @@ router.post('/add-product', [
         check('expiration_date')
             .exists()
             .withMessage('Please provide an expiration date for the new product')
-            .isString()
+            .isString(),
+        check('raws')
+            .custom(value => {
+                if(!Array.isArray(value) || value.length === 0)
+                    return Promise.reject('Invalid raws array')
+                else
+                    return true
+            })
     ], [
         isAuth,
         isAdminOrLaboratoryWorker
@@ -123,7 +129,14 @@ router.put('/update-product', [
         check('expiration_date')
             .exists()
             .withMessage('Please provide an expiration date for the new product')
-            .isString()
+            .isString(),
+        check('raws')
+            .custom(value => {
+                if(!Array.isArray(value) || value.length === 0)
+                    return Promise.reject('Invalid raws array')
+                else
+                    return true
+            })
     ], [
         isAuth,
         isAdminOrLaboratoryWorker

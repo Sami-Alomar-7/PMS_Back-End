@@ -51,10 +51,10 @@ exports.getAllProducts = (req, res, next) => {
             products: products
         });
     })
-    .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Products Not Found'
+    .catch(err => {
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -65,10 +65,10 @@ exports.getSpecificProduct = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Product.findOne({
         where: {
@@ -104,9 +104,9 @@ exports.getSpecificProduct = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -119,10 +119,10 @@ exports.getSpecificCompanyProducts = (req, res, next) =>{
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Company.findOne({
         offset: (page-1) * PRODUCTS_PER_REQUEST,
@@ -167,9 +167,9 @@ exports.getSpecificCompanyProducts = (req, res, next) =>{
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     });
 };

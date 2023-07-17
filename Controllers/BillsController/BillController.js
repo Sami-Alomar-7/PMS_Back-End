@@ -39,10 +39,10 @@ exports.getAllBills = (req, res, next) => {
             bills: (bills.length)? bills : 'There Is No Bills Yet...!'
         })
     })
-    .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Buy_Orders Not Found'
+    .catch(err => {
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };

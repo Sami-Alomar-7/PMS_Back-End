@@ -42,8 +42,8 @@ exports.getLaboratoryRaws = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })

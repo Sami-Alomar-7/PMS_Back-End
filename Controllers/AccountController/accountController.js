@@ -39,9 +39,9 @@ exports.getAllAccounts = (req, res, next) => {
             })
         })
         .catch(() => {
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Accounts Not Found'
+            next({
+                status: 500,
+                message: err.message
             })
         })
 };
@@ -53,10 +53,10 @@ exports.getSpecificAccount = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Account.findOne({
         where: {id: accountId},
@@ -88,9 +88,9 @@ exports.getSpecificAccount = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -100,10 +100,10 @@ exports.getSpecificeCompanyAccount = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Account.findOne({
         where: {companyId: companyId},
@@ -133,9 +133,9 @@ exports.getSpecificeCompanyAccount = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -146,10 +146,10 @@ exports.deleteAccount = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Account.findOne({where: {id: accountId}})
         .then(account => {
@@ -163,9 +163,9 @@ exports.deleteAccount = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
+            next({
+                status: 500,
+                message: err.message
             })
         })
 };

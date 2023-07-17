@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
+// Models
+const Company = require('../../Models/CompaniesModels/CompanyModel');
+
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
 const isAdmin = require('../../Middleware/isAdmin');
@@ -31,6 +34,17 @@ router.get('/display-all', [
 );
 
 router.get('/display-specifice-company', [
+        check('companyId')
+            .exists()
+            .withMessage('No companyId had been provided')
+            .custom(value => {
+                return Company.findOne({where: {id: value}})
+                    .then(company => {
+                        if(!company)
+                            return Promise.reject('No such comapny registered');
+                    })
+            })
+    ],[
         isAuth,
         isAdmin
     ],
@@ -38,6 +52,17 @@ router.get('/display-specifice-company', [
 );
 
 router.put('/update-company', [
+        check('companyId')
+            .exists()
+            .withMessage('No companyId had been provided')
+            .custom(value => {
+                return Company.findOne({where: {id: value}})
+                    .then(company => {
+                        if(!company)
+                            return Promise.reject('No such comapny registered');
+                    })
+            })
+    ], [
         // checking the incoming data from the request
         check('email')
             .isEmail()
@@ -62,6 +87,17 @@ router.put('/update-company', [
 );
 
 router.delete('/delete-company', [
+        check('companyId')
+            .exists()
+            .withMessage('No companyId had been provided')
+            .custom(value => {
+                return Company.findOne({where: {id: value}})
+                    .then(company => {
+                        if(!company)
+                            return Promise.reject('No such comapny registered');
+                    })
+            })
+    ], [
         isAuth,
         isAdmin
     ],

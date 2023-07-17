@@ -42,9 +42,9 @@ exports.getAllDebts = (req, res, next) => {
         })
     })
     .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Accounts Not Found'
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -55,10 +55,10 @@ exports.getSpecificDebt = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 500,
             message: errors.array()[0].msg
-        });
+        })
     
     Debt.findOne({
         where: {id: debtId},
@@ -86,9 +86,9 @@ exports.getSpecificDebt = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -100,12 +100,11 @@ exports.getSpecificeAccountDebts = (req, res, next) => {
     const page = req.query.page || 1;
     let accountTemp;
 
-    if(!errors.isEmpty()){
-        return res.status(400).json({
-            operation: 'Failed',
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
-    }
+        })
     
     Account.findOne({
         where: {id: accountId},
@@ -134,9 +133,9 @@ exports.getSpecificeAccountDebts = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -148,12 +147,11 @@ exports.postAddDebt = (req, res, next) => {
     const errors = validationResult(req);
     let orderTemp, debtTemp, accountTemp;
 
-    if(!errors.isEmpty()){
-        return res.status(400).json({
-            operation: 'Failed',
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
-    }
+        })
 
     Debt.findOne({where: {id: debtId}})
         .then(debt =>{
@@ -184,7 +182,6 @@ exports.postAddDebt = (req, res, next) => {
             else
                 // if the debt is not fully payed then incrase the credit amount of the account with the credit payed amount
                 accountTemp.credit += credit;
-
             // save the new account data
             return accountTemp.save();
         })
@@ -200,8 +197,8 @@ exports.postAddDebt = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -214,12 +211,11 @@ exports.putEditDebt = (req, res, next) => {
     const errors = validationResult(req);
     let oldDebtTemp, debtTemp, accountTemp;
 
-    if(!errors.isEmpty()){
-        return res.status(400).json({
-            operation: 'Failed',
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
-    }
+        })
 
     Debt.findOne({where: {id: debtId}})
         .then(debt =>{
@@ -256,7 +252,6 @@ exports.putEditDebt = (req, res, next) => {
             if(debtTemp.debt === 0)
                 accountTemp.credit -= debtTemp.credit;
             
-            
             // get the base account debt amount
             accountTemp.debt -= oldDebtTemp;
             // incrase the debt amount with the 
@@ -276,8 +271,8 @@ exports.putEditDebt = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })

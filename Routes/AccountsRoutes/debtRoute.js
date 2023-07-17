@@ -25,6 +25,7 @@ router.get('/display-all', [
 router.get('/display-debt', [
         check('debtId')
             .exists()
+            .withMessage('No such debtId had been provided')
             .custom(value => {
                 return Debt.findOne({where: {id: value}})
                     .then(debt => {
@@ -42,6 +43,7 @@ router.get('/display-debt', [
 router.get('/display-account-debts', [
         check('accountId')
             .exists()
+            .withMessage('No accountId had been provided')
             .custom(value => {
                 return Account.findOne({where: {id: value}})
                     .then(account => {
@@ -59,6 +61,7 @@ router.get('/display-account-debts', [
 router.post('/add-debt', [
         check('debtId')
             .exists()
+            .withMessage('No debtId had been provided')
             .custom(value => {
                 return Debt.findOne({where: {id: value}})
                     .then(debt => {
@@ -79,6 +82,7 @@ router.post('/add-debt', [
 router.put('/edit-Debt', [
         check('debtId')
             .exists()
+            .withMessage('No debtId had been provided')
             .custom(value => {
                 return Debt.findOne({where: {id: value}})
                     .then(debt => {

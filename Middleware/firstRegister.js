@@ -6,21 +6,19 @@ module.exports = (req, res, next) => {
     Employee.count()
     .then(employeeCount => {
         // check for the existens of employees if so...then return a failear error
-        if(employeeCount){
-            console.log(employeeCount)
-            return res.status(400).json({
-                onperation: 'Failed',
+        if(employeeCount)
+            return next({
+                status: 401,
                 message: 'Already Registered A First Admin'
-            });
-        }
+            })
         else
         // continue to the next stage
         next();
     })
     .catch(err => {
-        return res.status(500).json({
-            onperation: 'Failed',
-            meesage: err
+        return next({
+            status: 500,
+            message: err.message
         })
     })
 }

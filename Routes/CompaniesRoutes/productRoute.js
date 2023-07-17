@@ -25,6 +25,7 @@ router.get('/display-all', [
 router.get('/display-product', [
         check('productId')
             .exists()
+            .withMessage('No productId had been provided')
             .custom(value => {
                 return Product.findOne({where: {id: value}})
                     .then(product => {
@@ -42,6 +43,7 @@ router.get('/display-product', [
 router.get('/display-company-products', [
         check('companyId')
             .exists()
+            .withMessage('No companyId had been provided')
             .custom(value => {
                 return Company.findOne({where: {id: value}})
                     .then(company => {

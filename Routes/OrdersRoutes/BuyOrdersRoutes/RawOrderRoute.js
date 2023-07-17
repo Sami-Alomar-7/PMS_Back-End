@@ -18,6 +18,7 @@ const RawOrderController = require('../../../Controllers/OrdersController/BuyOrd
 router.get('/display-order', [
         check('orderId')
             .exists()
+            .withMessage('No orderId had been provided')
             .custom(value => {
                 return BuyOrder.findOne({where: {id: value}})
                     .then(buyOrder => {
@@ -35,6 +36,7 @@ router.get('/display-order', [
 router.post('/add-order', [
         check('companyId')
             .exists()
+            .withMessage('No companyId had been provided')
             .custom(value => {
                 return Company.findOne({where: {id: value}})
                     .then(company => {
@@ -60,6 +62,7 @@ router.post('/add-order', [
 router.put('/edit-order', [
         check('orderId')
             .exists()
+            .withMessage('No orderId had been provided')
             .custom(value => {
                 return BuyOrder.findOne({where: {id: value}})
                     .then(buyOrder => {
@@ -85,6 +88,7 @@ router.put('/edit-order', [
 router.delete('/delete-order', [
         check('orderId')
             .exists()
+            .withMessage('No orderId had been provided')
             .custom(value => {
                 return BuyOrder.findOne({where: {id: value}})
                     .then(buyOrder => {

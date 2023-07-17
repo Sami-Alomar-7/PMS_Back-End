@@ -45,8 +45,8 @@ exports.getAllProducts = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -57,10 +57,10 @@ exports.getSpecificeProduct = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     LaboratoryProduct.findOne({
         where: {id: productId},
@@ -80,8 +80,8 @@ exports.getSpecificeProduct = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -93,10 +93,10 @@ exports.getSpecificeOrderProducts = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Order.findOne({
         offset: (page-1) * PRODUCTS_PER_REQUEST,
@@ -118,8 +118,8 @@ exports.getSpecificeOrderProducts = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -141,13 +141,14 @@ exports.postAddOrderProduct = (req, res, next) => {
     
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(image)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(image.path);
-        return res.status(400).json({
-            operation: 'Failed',
+            if(!isDefaultImage(image.path))
+                deleteAfterMulter(image.path);
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     }
     
     // if there were no image uploaded set the default image
@@ -224,8 +225,8 @@ exports.postAddOrderProduct = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -247,13 +248,14 @@ exports.putEditProduct = (req, res, next) => {
     
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(updateImage)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(updateImage.path);
-        return res.status(400).json({
-            operation: 'Failed',
+            if(!isDefaultImage(updateImage.path))
+                deleteAfterMulter(updateImage.path);
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     }
 
     LaboratoryProduct.findOne({
@@ -278,11 +280,11 @@ exports.putEditProduct = (req, res, next) => {
             if(updateExpiration_date <= Date.now())
                 throw new Error('You Cann\'t add a product with such Expiration date');
             // remove the old image if it was updated and wasn't the default
-            if(updateImage)
-                if(!isDefaultImage(product.image_url)){
+            if(updateImage){
+                if(!isDefaultImage(product.image_url))
                     deleteAfterMulter(product.image_url);
-                    product.image_url = updateImage.path;
-                }
+                product.image_url = updateImage.path;
+            }
             
             // update the order with the new incoming data
             product.barcode = updateBarcode;
@@ -333,8 +335,8 @@ exports.putEditProduct = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -345,10 +347,10 @@ exports.deleteProduct = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     LaboratoryProduct.findOne({where: {id: productId}})
         .then(product => {
@@ -365,8 +367,8 @@ exports.deleteProduct = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.statu(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })

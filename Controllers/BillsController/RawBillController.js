@@ -25,10 +25,10 @@ exports.getSpecificBill = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Bill.findOne({
         where: {id: billId},
@@ -77,8 +77,8 @@ exports.getSpecificBill = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -92,10 +92,10 @@ exports.postAddBill = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
-            message: errors.array()[0]
-        });
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
         
     BuyOrder.findOne({where: {id: buyOrderId}})
         .then(order => {
@@ -137,8 +137,8 @@ exports.postAddBill = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -152,10 +152,10 @@ exports.putEditOrder = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
-            message: errors.array()[0]
-        });
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
         
     Bill.findOne({where: {id: billId}})
         .then(bill => {
@@ -201,8 +201,8 @@ exports.putEditOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -214,10 +214,10 @@ exports.deleteBill = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Bill.findOne({where: {id: billId}})
         .then(bill => {
@@ -231,9 +231,9 @@ exports.deleteBill = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
+            next({
+                status: 500,
+                message: err.message
             })
         })
 };

@@ -28,6 +28,7 @@ router.get('/display-all', [
 router.get('/display-account', [
     check('accountId')
         .exists()
+        .withMessage('No accountId had been provided')
         .custom(value => {
             return Account.findOne({where: {id: value}})
                 .then(account => {
@@ -45,6 +46,7 @@ router.get('/display-account', [
 router.get('/display-company-accounts', [
     check('companyId')
         .exists()
+        .withMessage('No such companyId had been provided')
         .custom(value => {
             return Account.findOne({where: {companyId: value}})
                 .then(account => {
@@ -62,6 +64,7 @@ router.get('/display-company-accounts', [
 router.delete('/delete-account', [
     check('accountId')
         .exists()
+        .withMessage('No such accountId had been provided')
         .custom(value => {
             return Account.findOne({where: {id: value}})
                 .then(account => {

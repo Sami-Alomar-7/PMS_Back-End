@@ -25,6 +25,8 @@ const { Op } = require('sequelize');
     const deleteAfterMulter = require('../Helper/deleteAfterMulter');
     // for the files reaching
     const path = require('path');
+    // for dtermine whether the image is the default one or not
+    const isDefaultImage = require('../Helper/isDefaultImage');
 
 // POST - Register
 exports.postRegister = (req, res, next) => {
@@ -41,13 +43,14 @@ exports.postRegister = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(image)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(image.path);
-        return res.status(401).json({
-            operation: 'Failed',
-            message: errors.array()[0].msg
-        });
+            if(!isDefaultImage(image.path))
+                deleteAfterMulter(image.path);  
+            return next({
+                status: 400, 
+                message: errors.array()[0].msg
+            });
     }
 
     // if there were no image uploaded set the default image
@@ -87,11 +90,13 @@ exports.postRegister = (req, res, next) => {
         })
         .catch(err => {
             // if there where an error then delete the stored image
-            deleteAfterMulter(image.path); 
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
-            });            
+            if(image)
+                if(!isDefaultImage(imagePath))
+                    deleteAfterMulter(image.path);
+            next({
+                status:500, 
+                message: err.message
+            });
         })
 };
 
@@ -106,8 +111,9 @@ exports.getRole = (req, res, next) => {
         });
     })
     .catch(err => {
-        return res.status(500).json({
-            message: err
+        next({
+            status:500, 
+            message: err.message
         });
     });
 };
@@ -120,9 +126,9 @@ exports.postLogin = (req, res, next) => {
 
     //check if there is an error 
     if(!errors.isEmpty())
-        return res.status(401).json({
-            operation: 'Failed',
-            message: errors.array()[0].msg,
+        return next({
+            status: 400, 
+            message: errors.array()[0].msg
         });
     
     // find the employee with the given e-mail
@@ -154,21 +160,22 @@ exports.postLogin = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
+            next({
+                status: 500, 
+                message: err.message
             });
-        });
-    };
+        })
+};
     
 exports.postVerifyLoggin = (req, res, next) => {
     // get the code from the request body
     const code = req.body.code;
-        
-    if(!code)
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Code Not Found'
+    const errors = validationResult(req);
+    
+    if(!errors.isEmpty())
+        return next({
+            status: 400, 
+            message: errors.array()[0].msg
         });
         
     Employee.findOne({
@@ -206,11 +213,11 @@ exports.postVerifyLoggin = (req, res, next) => {
         });
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500, 
             message: err.message
         })
-    });
+    })
 };
     
 exports.postResetPassword = (req, res, next) => {
@@ -220,8 +227,8 @@ exports.postResetPassword = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty())
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 400, 
             message: errors.array()[0].msg
         });
         
@@ -250,21 +257,22 @@ exports.postResetPassword = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500, 
                 message: err.message
-            });
-        });
+            })
+        })
 };
 
 exports.postVerifyRestPassword = (req, res, next) => {
     // get the code from the request body
     const code = req.body.code;
+    const errors = validationResult(req);
 
-    if(!code)
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Code Not Found'
+    if(!errors.isEmpty())
+        return next({
+            status: 400, 
+            message: errors.array()[0].msg
         });
         
     // find the employee with that code and check if the 10 min passed
@@ -293,11 +301,11 @@ exports.postVerifyRestPassword = (req, res, next) => {
         });
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500, 
             message: err.message
-        });
-    });
+        })
+    })
 };
 
 exports.postNewPassword = (req, res, next) => {
@@ -308,9 +316,9 @@ exports.postNewPassword = (req, res, next) => {
 
     //check if there is an error 
     if(!errors.isEmpty())
-        return res.status(401).json({
-            operation: 'Failed',
-            message: errors.array(),
+        return next({
+            status: 400, 
+            message: errors.array()[0].msg
         });
     
     let employeeTemp;
@@ -342,11 +350,11 @@ exports.postNewPassword = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
+            next({
+                status: 500, 
+                message: err.message
             })
-        });
+        })
 };
 
 exports.postLogout = (req, res, next) => {
@@ -354,8 +362,8 @@ exports.postLogout = (req, res, next) => {
     
     // if there were no employee id in the request that means the employee not logged in
     if(!employeeId)
-        return res.status(401).json({
-            operation: 'Failed',
+        return next({
+            status: 401, 
             message: 'Unauthorized'
         });
     
@@ -375,9 +383,9 @@ exports.postLogout = (req, res, next) => {
             });
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
-                message: err
-            });
+            next({
+                status: 500, 
+                message: err.message
+            })
         })
 };

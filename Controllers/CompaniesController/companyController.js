@@ -35,16 +35,23 @@ exports.getAllCompanies = (req, res, next) => {
             companies: company
         })
     })
-    .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Companies Not Found'
+    .catch(err => {
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
 
 exports.getSpecificeCompany = (req, res, next) => {
     const companyId = req.body.companyId;
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
 
     Company.findOne({
         where: { id: companyId},
@@ -59,10 +66,10 @@ exports.getSpecificeCompany = (req, res, next) => {
             company: company
         })
     })
-    .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Company Not Found'
+    .catch(err => {
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -79,20 +86,22 @@ exports.putUpdateProfile = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(updateImage)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(updateImage.path);
-        return res.status(401).json({
-            operation: 'Failed',
+            if(!isDefaultImage(updateImage.path))
+                deleteAfterMulter(updateImage.path);
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     }
     // get the Company and update its data
     Company.findOne({where: { id: updateCompanyId}})
         .then(company => {
+            // remove the old image if it was updated
             if(updateImage){
-                // remove the old image if it was updated
-                deleteAfterMulter(company.image_url);
+                if(!isDefaultImage(company.image_url))
+                    deleteAfterMulter(company.image_url);
                 company.image_url = updateImage.path;
             }
             
@@ -111,38 +120,46 @@ exports.putUpdateProfile = (req, res, next) => {
                 company: company
             })
         })
-        .catch(() => {
+        .catch(err => {
+            // if there where an error then delete the stored image
             if(updateImage)
-                // if there where an error then delete the stored image
-                deleteAfterMulter(updateImage.path);
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Company Noy Found'
+                if(!isDefaultImage(updateImage.path))
+                    deleteAfterMulter(updateImage.path);
+            next({
+                status: 500,
+                message: err.message
             })
         });
 };
 
 exports.deleteCompany = (req, res, next) => {
     const companyId = req.body.companyId;
-    
-    Company.findOne({where: {id: companyId}})
-    .then(company => {
-        // delete the company image if it wasn't the default
-        if(!isDefaultImage(company.image_url))
-            deleteAfterMulter(company.image_url);
+    const errors = validationResult(req);
 
-        return Company.destroy({where: {id: company.id}})
-    })
-    .then(() => {
-        return res.status(200).json({
-            operation: 'Succeed',
-            message: 'Company Deleted Successfully'
-        });
-    })
-    .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Company Not Found'
-        });
-    });
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+
+    Company.findOne({where: {id: companyId}})
+        .then(company => {
+            // delete the company image if it wasn't the default
+            if(!isDefaultImage(company.image_url))
+                deleteAfterMulter(company.image_url);
+
+            return Company.destroy({where: {id: company.id}})
+        })
+        .then(() => {
+            return res.status(200).json({
+                operation: 'Succeed',
+                message: 'Company Deleted Successfully'
+            });
+        })
+        .catch(err => {
+            next({
+                status: 500,
+                message: err.message
+            })
+        })
 };

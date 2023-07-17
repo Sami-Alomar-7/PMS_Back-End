@@ -51,7 +51,17 @@ router.post('/add-laboratory', [
         // checking the incoming data from the request
         check('email')
             .isEmail()
-            .withMessage('Please Enter A Valid E-mail'),
+            .withMessage('Please Enter A Valid E-mail')
+            .exists()
+            .withMessage('No Email had been provided')
+            .normalizeEmail()
+            .custom(value => {
+                return Laboratory.findOne({where: {email: value}})
+                    .then(laboratory => {
+                        if(laboratory)
+                            return Promise.reject('E-Mail Is Already Exists, Please Pick A Different One');
+                    })
+            }),
         check('name')
             .isString()
             .trim(),
@@ -79,7 +89,15 @@ router.put('/update-laboratory', [
             }),
         check('email')
             .isEmail()
-            .withMessage('Please Enter A Valid E-mail'),
+            .withMessage('Please Enter A Valid E-mail')
+            .normalizeEmail()
+            .custom(value => {
+                return Laboratory.findOne({where: {email: value}})
+                    .then(laboratory => {
+                        if(laboratory)
+                            return Promise.reject('E-Mail Is Already Exists, Please Pick A Different One');
+                    })
+            }),
         check('name')
             .isString()
             .trim(),

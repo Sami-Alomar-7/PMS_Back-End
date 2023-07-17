@@ -19,6 +19,8 @@ router.post('/register', [
         check('email')
             .isEmail()
             .withMessage('Please Enter A Valid E-mail')
+            .exists()
+            .withMessage('No Email had been provided')
             .normalizeEmail()
             .custom(value => {
                 return Employee.findOne({where: {email: value}})
@@ -71,6 +73,8 @@ router.post('/login',[
         check('email')
             .isEmail()
             .withMessage('Please Enter A Valid E-mail')
+            .exists()
+            .withMessage('No Email had been provided')
             .normalizeEmail()
             .custom(value => {
                 return Employee.findOne({where: {email: value}})
@@ -87,12 +91,28 @@ router.post('/login',[
 );
 
 // POST - Login (localhost:7000/api/auth/verify-login)
-router.post('/verify-login', authController.postVerifyLoggin);
+router.post('/verify-login', [
+        // checking the incoming fata from the request
+        check('code')
+        .exists()
+        .withMessage('No code had been provided')
+        .custom(value => {
+            return Employee.findOne({where: {token: value}})
+                .then(employee => {
+                    if(!employee)
+                        return Promise.reject('There is no such code registered');
+                });
+        }),
+    ], 
+    authController.postVerifyLoggin
+);
 
 // POST - Login (localhost:7000/api/auth/resset-password)
 router.post('/reset-password', [
         check('email')
             .isEmail()
+            .exists()
+            .withMessage('No Email had been provided')
             .normalizeEmail()
             .custom(value => {
                 return Employee.findOne({where: {email: value}})
@@ -106,7 +126,21 @@ router.post('/reset-password', [
 );
 
 // POST - Login (localhost:7000/api/auth/verify-reset-password)
-router.post('/verify-reset-password', authController.postVerifyRestPassword);
+router.post('/verify-reset-password', [
+        // checking the incoming fata from the request
+        check('code')
+        .exists()
+        .withMessage('No code had been provided')
+        .custom(value => {
+            return Employee.findOne({where: {token: value}})
+                .then(employee => {
+                    if(!employee)
+                        return Promise.reject('There is no such code registered');
+                });
+        }),
+    ], 
+    authController.postVerifyRestPassword
+);
 
 // POST - Login (localhost:7000/api/auth/new-password)
 router.post('/new-password', [
@@ -134,5 +168,7 @@ router.post('/new-password', [
     ],
     authController.postNewPassword
 );
+
+router.post('/logout', authController.postLogout);
 
 module.exports = router;

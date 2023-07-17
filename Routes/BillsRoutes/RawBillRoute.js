@@ -18,6 +18,7 @@ const RawBillController = require('../../Controllers/BillsController/RawBillCont
 router.get('/display-bill', [
         check('billId')
             .exists()
+            .withMessage('No billId had been provided')
             .custom(value => {
                 return Bill.findOne({where: {id: value}})
                     .then(bill => {
@@ -35,6 +36,7 @@ router.get('/display-bill', [
 router.post('/add-bill', [
         check('buyOrderId')
             .exists()
+            .withMessage('No buyOrderId had been provided')
             .custom(value => {
                 return BuyOrder.findOne({where: {id: value}})
                     .then(buyOrder => {
@@ -60,6 +62,7 @@ router.post('/add-bill', [
 router.put('/edit-bill', [
         check('billId')
             .exists()
+            .withMessage('No billId had been provided')
             .custom(value => {
                 return Bill.findOne({where: {id: value}})
                     .then(Bill => {
@@ -85,6 +88,7 @@ router.put('/edit-bill', [
 router.delete('/delete-bill', [
         check('billId')
             .exists()
+            .withMessage('No billId had been provided')
             .custom(value => {
                 return Bill.findOne({where: {id: value}})
                     .then(bill => {

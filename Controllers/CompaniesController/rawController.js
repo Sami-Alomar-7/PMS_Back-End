@@ -41,9 +41,9 @@ exports.getAllRaws = (req, res, next) => {
         });
     })
     .catch(() => {
-        return res.status(404).json({
-            operation: 'Failed',
-            message: 'Products Not Found'
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -54,10 +54,10 @@ exports.getSpecificRaw = (req, res, next) => {
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 500,
             message: errors.array()[0].msg
-        });
+        })
     
     Raw.findOne({
         where: {
@@ -87,9 +87,9 @@ exports.getSpecificRaw = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 500,
+            message: err.message
         })
     })
 };
@@ -102,10 +102,10 @@ exports.getSpecificCompanyRaws = (req, res, next) =>{
     const errors = validationResult(req);
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
-            message: errors.array()[0].msg
-        });
+        return next({
+            status: 500,
+            message: err.message
+        })
     
     Company.findOne({
         offset: (page-1) * RAW_PER_REQUEST,
@@ -138,9 +138,9 @@ exports.getSpecificCompanyRaws = (req, res, next) =>{
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
-            message: err
+        next({
+            status: 400,
+            message: err.message
         })
-    });
+    })
 };

@@ -62,7 +62,9 @@ const sequelize = require('./Util/database');
     const helmet = require('helmet');
     // Permissions-Policy is a fork of helmet for adding the Permission-Policy header and manage it
     const permissionsPolicy = require('permissions-policy')
-    
+    // for forwarding the errors to one place and mange it in there
+    const ErrorsMiddleware = require('./Middleware/Errors/ErrorsMiddleware');
+
 // Helper
     // for setting up the required data into the database
     const setupDataset = require('./Helper/setupDatabase/setupDatabase');
@@ -139,6 +141,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/company', companyRoute);
 app.use('/api/laboratory', laboratoryRoute);
+app.use('/api', ErrorsMiddleware);
 
 // Defines the models and its associations
     // Employees ---> (Employee_Roles) <--- Roles

@@ -31,8 +31,8 @@ exports.getAllOrders = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -43,10 +43,10 @@ exports.getSpecificeOrder = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Order.findOne({
         where: {id: orderId},
@@ -62,8 +62,8 @@ exports.getSpecificeOrder = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -74,10 +74,10 @@ exports.getSpecificeLaboratoryOrders = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Order.findOne({
         where: {laboratoryId: laboratoryId},
@@ -93,8 +93,8 @@ exports.getSpecificeLaboratoryOrders = (req, res, next) => {
         })
     })
     .catch(err => {
-        return res.status(500).json({
-            operation: 'Failed',
+        next({
+            status: 500,
             message: err.message
         })
     })
@@ -105,10 +105,10 @@ exports.postAcceptOrder = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Order.findOne({where: {id: orderId}})
         .then(order => {
@@ -125,8 +125,8 @@ exports.postAcceptOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -137,10 +137,10 @@ exports.postRejectOrder = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Order.findOne({where: {id: orderId}})
         .then(order => {
@@ -157,8 +157,8 @@ exports.postRejectOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -169,10 +169,10 @@ exports.postReadyOrder = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Order.findOne({where: {id: orderId}})
         .then(order => {
@@ -189,8 +189,8 @@ exports.postReadyOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -207,10 +207,10 @@ exports.postAddOrder = (req, res, next) => {
     let lastOrderNumber;
 
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
-            message: errors.array()[0]
-        });
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
     
     Order.findOne({order: [['updatedAt', 'DESC']]})
         .then(order => {
@@ -236,8 +236,8 @@ exports.postAddOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -253,10 +253,10 @@ exports.putEditOrder = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Order.findOne({where: {id: orderId}})
         .then(order => {
@@ -278,8 +278,8 @@ exports.putEditOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.statu(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -290,10 +290,10 @@ exports.deleteOrder = (req, res, next) => {
     const errors = validationResult(req);
     
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
 
     Order.findOne({where: {id: orderId}})
         .then(order => {
@@ -307,8 +307,8 @@ exports.deleteOrder = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.statu(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })

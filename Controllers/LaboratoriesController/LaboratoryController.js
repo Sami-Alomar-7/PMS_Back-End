@@ -32,8 +32,8 @@ exports.getLaboratories = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(404).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -45,10 +45,10 @@ exports.getSpecificeLaboratory = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty())
-        return res.status(400).json({
-            operation: 'Failed',
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     
     Laboratory.findOne({where: {id: laboratoryId}})
         .then(laboratory => {
@@ -58,8 +58,8 @@ exports.getSpecificeLaboratory = (req, res, next) => {
             })
         })
         .catch(err => {
-            return res.status(500).json({
-                operation: 'Failed',
+            next({
+                status: 500,
                 message: err.message
             })
         })
@@ -74,13 +74,14 @@ exports.postAddLaboratory = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
-        if(updateImage)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(updateImage.path);
-        return res.status(401).json({
-            operation: 'Failed',
+        // if there where an error then delete the stored image
+        if(image)
+            if(!isDefaultImage(image.path))
+                deleteAfterMulter(image.path);
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     }
     
     // if there were no image uploaded set the default image
@@ -106,10 +107,11 @@ exports.postAddLaboratory = (req, res, next) => {
         })
         .catch(() => {
             if(image)
-                deleteAfterMulter(imagePath);
-            return res.status(500).json({
-                operation: 'Failed',
-                message: 'Couldn\'t Add Laboratory'
+                if(!isDefaultImage(image.path))
+                    deleteAfterMulter(imagePath);
+            next({
+                status: 500,
+                message: err.message
             })
         })
 };
@@ -124,13 +126,14 @@ exports.putUpdateLaboratory = (req, res, next) => {
 
     // check if there is an error in the request
     if(!errors.isEmpty()){
+        // if there where an error then delete the stored image
         if(updateImage)
-            // if there where an error then delete the stored image
-            deleteAfterMulter(updateImage.path);
-        return res.status(401).json({
-            operation: 'Failed',
+            if(!isDefaultImage(updateImage.path))
+                deleteAfterMulter(updateImage.path);
+        return next({
+            status: 400,
             message: errors.array()[0].msg
-        });
+        })
     }
     // get the Laboratory and update its data
     Laboratory.findOne({where: {id: laboratoryId}})
@@ -156,18 +159,26 @@ exports.putUpdateLaboratory = (req, res, next) => {
             })
         })
         .catch(() => {
+            // if there where an error then delete the stored image
             if(updateImage)
-                // if there where an error then delete the stored image
-                deleteAfterMulter(updateImage.path);
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Laboratory Not Found'
+                if(!isDefaultImage(updateImage.path))
+                    deleteAfterMulter(updateImage.path);
+            next({
+                status: 500,
+                message: err.message
             })
         });
 };
 
 exports.deleteLaboratory = (req, res, next) => {
     const laboratoryId = req.body.laboratoryId;
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty())
+        return next({
+            status: 400,
+            message: errors.array()[0].msg
+        })
 
     Laboratory.findOne({where: {id: laboratoryId}})
         .then(laboratory => {
@@ -184,9 +195,9 @@ exports.deleteLaboratory = (req, res, next) => {
             });
         })
         .catch(() => {
-            return res.status(404).json({
-                operation: 'Failed',
-                message: 'Laboratory Not Found'
-            });
-        });
+            next({
+                status: 500,
+                message: err.message
+            })
+        })
 };
