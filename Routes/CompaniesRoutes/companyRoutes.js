@@ -27,8 +27,7 @@ const companyController = require('../../Controllers/CompaniesController/company
     const billRoutes = require('../BillsRoutes/BillRoute');
 
 router.get('/display-all', [
-        isAuth,
-        isAdmin
+        isAuth
     ],
     companyController.getAllCompanies
 );
@@ -45,8 +44,7 @@ router.get('/display-specifice-company', [
                     })
             })
     ],[
-        isAuth,
-        isAdmin
+        isAuth
     ],
     companyController.getSpecificeCompany
 );
@@ -84,6 +82,33 @@ router.put('/update-company', [
         isAdmin
     ],
     companyController.putUpdateProfile
+);
+
+router.get('/display-type', [
+        check('typeId')
+            .exists()
+            .withMessage('No typeId had been provided')
+            .custom(value => {
+                if(value <= 0)
+                    return Promise.reject('Wrong typeId, Cann\'t be less than 0')
+                if(value > 7)
+                    return Promise.reject('No such typeId had been registered');
+            })
+    ], [
+        isAuth
+    ],
+    companyController.getCompnayByType
+)
+
+router.post('/advanced-search', [
+        check('name')
+            .exists()
+            .withMessage('No search name had been provided')
+            .isString()
+    ], [
+        isAuth
+    ],
+    companyController.postAdvancedCompaniesSearch
 );
 
 router.delete('/delete-company', [

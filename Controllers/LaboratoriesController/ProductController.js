@@ -8,6 +8,10 @@ const LaboratoryProductRaws = require('../../Models/LaboratoriesModels/Laborator
 // using the .env file
 require('dotenv').config();
 
+// Helper
+    // for applying the advanced search using string-similarity
+    const similarSearch = require('../../Helper/retriveSimilarSearch');
+
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
 
@@ -340,6 +344,29 @@ exports.putEditProduct = (req, res, next) => {
                 message: err.message
             })
         })
+};
+
+exports.postAdvancedLaboratoryProductsSearch = (req, res, next) => {
+    // get the searched string from the request body
+    const searchName = req.body.name;
+    // get all the laboratory products using raw for not getting a model instance
+    LaboratoryProduct.findAll({raw: true})
+    .then(products => {
+        //  send the laboratory products objects with the searched string to get the most similares laboratory products based on thier names
+        const resultArray = similarSearch(products, searchName);
+        // return the search result with the similar objects from the most similar to the less
+        return res.status(200).json({
+            operation: 'Succeed',
+            searchResult: resultArray
+        })
+    })
+    .catch(err => {
+        // jump into the error middleware to handle the error and send the appropriate message
+        next({
+            status: 500,
+            message: err.message
+        })
+    })
 };
 
 exports.deleteProduct = (req, res, next) => {

@@ -3,23 +3,23 @@ const router = express.Router();
 
 // Models
 const Order = require('../../Models/LaboratoriesModels/LaboratoryOrderMode');
+const LaboratoryProduct = require('../../Models/LaboratoriesModels/LaboratoryProductModel');
 
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
+const isAdmin = require('../../Middleware/isAdmin');
 const isAdminOrLaboratoryWorker = require('../../Middleware/isAdminOrLaboratoryWorker');
 
 // for validate the incoming requsts
 const { check } = require('express-validator');
 
 // the controllers which the requests forwarded to
-const productController = require('../../Controllers/LaboratoriesController/ProductController');
-const LaboratoryProduct = require('../../Models/LaboratoriesModels/LaboratoryProductModel');
+const laboratoryProductController = require('../../Controllers/LaboratoriesController/ProductController');
 
 router.get('/display-all', [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ],
-    productController.getAllProducts
+    laboratoryProductController.getAllProducts
 );
 
 router.get('/display-product',[
@@ -34,10 +34,9 @@ router.get('/display-product',[
                     })
             })
     ] , [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ], 
-    productController.getSpecificeProduct
+    laboratoryProductController.getSpecificeProduct
 );
 
 router.get('/display-order-product',[
@@ -52,10 +51,9 @@ router.get('/display-order-product',[
                     })
             })
     ], [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ], 
-    productController.getSpecificeOrderProducts
+    laboratoryProductController.getSpecificeOrderProducts
 );
 
 router.post('/add-product', [
@@ -95,10 +93,9 @@ router.post('/add-product', [
                     return true
             })
     ], [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ],
-    productController.postAddOrderProduct
+    laboratoryProductController.postAddOrderProduct
 );
 
 router.put('/update-product', [
@@ -141,7 +138,18 @@ router.put('/update-product', [
         isAuth,
         isAdminOrLaboratoryWorker
     ],
-    productController.putEditProduct
+    laboratoryProductController.putEditProduct
+);
+
+router.post('/advanced-search', [
+        check('name')
+            .exists()
+            .withMessage('No search name had been provided')
+            .isString()
+    ], [
+        isAuth
+    ],
+    laboratoryProductController.postAdvancedLaboratoryProductsSearch
 );
 
 router.delete('/delete-product', [
@@ -157,9 +165,9 @@ router.delete('/delete-product', [
             })
     ],[
         isAuth,
-        isAdminOrLaboratoryWorker
+        isAdmin
     ],
-    productController.deleteProduct
+    laboratoryProductController.deleteProduct
 );
 
 module.exports = router;

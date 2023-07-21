@@ -122,6 +122,18 @@ router.put('/update-employee', [
     employeeController.putUpdateProfile
 );
 
+router.post('/advanced-search', [
+        check('name')
+            .exists()
+            .withMessage('No search name had been provided')
+            .isString()
+    ], [
+        isAuth,
+        isAdmin
+    ],
+    employeeController.postAdvancedEmployeesSearch
+);
+
 router.delete('/delete-employee', [
         check('employeeId')
             .exists()

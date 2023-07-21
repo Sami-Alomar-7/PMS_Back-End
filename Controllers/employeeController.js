@@ -17,7 +17,10 @@ const bcrypt = require('bcryptjs');
     const deleteAfterMulter = require('../Helper/deleteAfterMulter');
     // for the files reaching
     const path = require('path');
-const isDefaultImage = require('../Helper/isDefaultImage');
+    // for detectiong whether the image is the default or not
+    const isDefaultImage = require('../Helper/isDefaultImage');
+    // for applying the advanced search using string-similarity
+    const similarSearch = require('../Helper/retriveSimilarSearch');
 
 // number of employees which wiil be sent with a single request
 const EMPLOYEE_PER_REQUEST = 4;
@@ -273,6 +276,29 @@ exports.putUpdateProfile = (req, res, next) => {
             message: err.message
         })
     });
+};
+
+exports.postAdvancedEmployeesSearch = (req, res, next) => {
+    // get the searched string from the request body
+    const searchName = req.body.name;
+    // get all the employees using raw for not getting a model instance
+    Employee.findAll({raw: true})
+        .then(employees => {
+            //  send the employees objects with the searched string to get the most similares employees based on thier names
+            const resultArray = similarSearch(employees, searchName);
+            // return the search result with the similar objects from the most similar to the less
+            return res.status(200).json({
+                operation: 'Succeed',
+                searchResult: resultArray
+            })
+        })
+        .catch(err => {
+            // jump into the error middleware to handle the error and send the appropriate message
+            next({
+                status: 500,
+                message: err.message
+            })
+        })
 };
 
 exports.deleteEmployee = (req, res, next) => {

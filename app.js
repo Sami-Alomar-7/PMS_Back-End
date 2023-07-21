@@ -108,8 +108,8 @@ const authRateLimiter = rateLimiter({
     windowMs: 10 * 60 * 1000,
     max: (req, res) => {
         if(RateLimiterCheck(req, res))
-            return 100;
-        return 10;
+            return 1000;
+        return 100;
     },
     message: 'Too many attempts from this IP, please try again after 10 minutes',
     standardHeaders: true, 
@@ -259,10 +259,18 @@ sequelize
                 return new Error('Couldn\'t set the required dataset to the database');
             
             // let the server listen on the chosed port 
-            app.listen(process.env.SERVER_PORT);
+            const httpServer = app.listen(process.env.SERVER_PORT);
+            const io = require('socket.io')(httpServer);
+            io.on('connection', socket => {
+                io.emit('do', {message: 'Yes'})
+                io.on('test', t => {
+                    console.log(t)
+                })
+            });
         })
-        .then(() =>
+        .then(() => {
             console.log('Running on Port: ' + process.env.SERVER_PORT)
+        }
         )
         .catch(err => 
             console.log(err)

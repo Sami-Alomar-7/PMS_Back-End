@@ -32,7 +32,9 @@
     "mysql2": "^3.3.3",
     "nodemailer": "^6.9.3",
     "permissions-policy": "^0.6.0",
-    "sequelize": "^6.32.0"
+    "sequelize": "^6.32.0",
+    "socket.io": "^4.7.1",
+    "string-similarity-js": "^2.1.4"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

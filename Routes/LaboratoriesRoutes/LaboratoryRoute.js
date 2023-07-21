@@ -6,6 +6,7 @@ const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
+const isAdmin = require('../../Middleware/isAdmin');
 const isAdminOrLaboratoryWorker = require('../../Middleware/isAdminOrLaboratoryWorker');
 
 // for validate the incoming requsts
@@ -23,8 +24,7 @@ const laboratoryController = require('../../Controllers/LaboratoriesController/L
         const laboratoryProduct = require('./ProductRoute');
 
 router.get('/display-all', [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ],
     laboratoryController.getLaboratories
 );
@@ -41,8 +41,7 @@ router.get('/display-specifice-laboratory', [
                     })
             })
     ],[
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ],
     laboratoryController.getSpecificeLaboratory
 );
@@ -70,7 +69,7 @@ router.post('/add-laboratory', [
             .trim()
     ], [
         isAuth,
-        isAdminOrLaboratoryWorker
+        isAdmin
     ],
     laboratoryController.postAddLaboratory
 );
@@ -106,7 +105,7 @@ router.put('/update-laboratory', [
             .trim()
     ], [
         isAuth,
-        isAdminOrLaboratoryWorker
+        isAdmin
     ],
     laboratoryController.putUpdateLaboratory
 );
@@ -124,7 +123,7 @@ router.delete('/delete-laboratory', [
                 }),
     ],[
         isAuth,
-        isAdminOrLaboratoryWorker
+        isAdmin
     ],
     laboratoryController.deleteLaboratory
 );

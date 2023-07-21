@@ -7,6 +7,7 @@ const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
+const isAdmin = require('../../Middleware/isAdmin');
 const isAdminOrLaboratoryWorker = require('../../Middleware/isAdminOrLaboratoryWorker');
 
 // for validate the incoming requsts
@@ -16,8 +17,7 @@ const { check } = require('express-validator');
 const orderController = require('../../Controllers/LaboratoriesController/OrderController');
 
 router.get('/display-all', [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ],
     orderController.getAllOrders
 );
@@ -34,8 +34,7 @@ router.get('/display-order',[
                     })
             })
     ] , [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ], 
     orderController.getSpecificeOrder
 );
@@ -52,8 +51,7 @@ router.get('/display-laboratory-orders',[
                     })
             })
     ], [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ], 
     orderController.getSpecificeLaboratoryOrders
 );
@@ -134,8 +132,7 @@ router.post('/add-order', [
             .isString()
             .trim()
     ], [
-        isAuth,
-        isAdminOrLaboratoryWorker
+        isAuth
     ],
     orderController.postAddOrder
 );
@@ -181,7 +178,7 @@ router.delete('/delete-order', [
             })
     ],[
         isAuth,
-        isAdminOrLaboratoryWorker
+        isAdmin
     ],
     orderController.deleteOrder
 );

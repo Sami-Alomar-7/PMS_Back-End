@@ -3,7 +3,6 @@ const router = express.Router();
 
 // Required Middleware
 const isAuth = require('../../../Middleware/isAuth');
-const isAdmin = require('../../../Middleware/isAdmin');
 
 // the controllers which the requests forwarded to
 const OrderController = require('../../../Controllers/OrdersController/BuyOrdersController/OrderController');
@@ -15,8 +14,7 @@ const OrderController = require('../../../Controllers/OrdersController/BuyOrders
     const RawOrder = require('../../OrdersRoutes/BuyOrdersRoutes/RawOrderRoute');
 
 router.get('/display-all', [
-        isAuth,
-        isAdmin
+        isAuth
     ],
     OrderController.getAllOrders
 );

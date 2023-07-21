@@ -13,6 +13,8 @@ const { validationResult } = require('express-validator');
         const deleteAfterMulter = require('../../Helper/deleteAfterMulter');
     // for detecting if the image was the default one
         const isDefaultImage = require('../../Helper/isDefaultImage');
+    // for applying the advanced search using string-similarity
+    const similarSearch = require('../../Helper/retriveSimilarSearch');
 
 // number of companies which wiil be sent with a single request
 const COMPANIES_PER_REQUEST = 10;
@@ -130,6 +132,52 @@ exports.putUpdateProfile = (req, res, next) => {
                 message: err.message
             })
         });
+};
+
+exports.getCompnayByType = (req, res, next) => {
+    const typeId = req.body.typeId;
+    const page = req.query.page || 1;
+    Company.findAll({
+        offset: (page-1) * COMPANIES_PER_REQUEST,
+        limit: COMPANIES_PER_REQUEST,
+        where: {companiesTypeId: typeId},
+        include: Type
+    })
+    .then(companies => {
+        return res.status(200).json({
+            operation: 'Succeed',
+            companies: companies
+        })
+    })
+    .catch(err => {
+        next({
+            status: 500,
+            message: err.message
+        })
+    })
+}
+
+exports.postAdvancedCompaniesSearch = (req, res, next) => {
+    // get the searched string from the request body
+    const searchName = req.body.name;
+    // get all the compnies using raw for not getting a model instance
+    Company.findAll({raw: true})
+        .then(companies => {
+            // send the comapnies objects with the searched string to get the most similares comapnies to that search
+            const resultArray = similarSearch(companies, searchName);
+            // return the search result with the similar objects from the most similar to the less
+            return res.status(200).json({
+                operation: 'Succeed',
+                searchResult: resultArray
+            })
+        })
+        .catch(err => {
+            // jump into the error middleware to handle the error and send the appropriate message
+            next({
+                status: 500,
+                message: err.message
+            })
+        })
 };
 
 exports.deleteCompany = (req, res, next) => {

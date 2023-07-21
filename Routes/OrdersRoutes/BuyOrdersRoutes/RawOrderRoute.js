@@ -27,8 +27,7 @@ router.get('/display-order', [
                     })
             })
     ], [
-        isAuth,
-        isAdmin
+        isAuth
     ],
     RawOrderController.getSpecificOrder
 );

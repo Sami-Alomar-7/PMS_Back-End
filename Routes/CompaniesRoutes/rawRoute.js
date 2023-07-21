@@ -3,11 +3,11 @@ const router = express.Router();
 
 // Models
 const Raw = require('../../Models/RawsModels/RawModel');
+const RawCategory = require('../../Models/RawsModels/CategoryModel');
 const Company = require('../../Models/CompaniesModels/CompanyModel');
 
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
-const isAdmin = require('../../Middleware/isAdmin');
 
 // for validate the incoming requsts
 const { check } = require('express-validator');
@@ -16,10 +16,20 @@ const { check } = require('express-validator');
 const rawController = require('../../Controllers/CompaniesController/rawController');
 
 router.get('/display-all', [
-        isAuth,
-        isAdmin
+        isAuth
     ],  
     rawController.getAllRaws
+);
+
+router.post('/advanced-search', [
+        check('name')
+            .exists()
+            .withMessage('No search name had been provided')
+            .isString()
+    ], [
+        isAuth
+    ],
+    rawController.postAdvancedRawsSearch
 );
 
 router.get('/display-raw', [
@@ -34,8 +44,7 @@ router.get('/display-raw', [
                     })
             })
     ], [
-        isAuth,
-        isAdmin
+        isAuth
     ],
     rawController.getSpecificRaw
 );
@@ -52,10 +61,47 @@ router.get('/display-company-raw', [
                     })
             })
     ], [
-        isAuth,
-        isAdmin
+        isAuth
     ],
     rawController.getSpecificCompanyRaws
+);
+
+router.get('/display-category', [
+        check('categoryId')
+            .exists()
+            .withMessage('No categoryId had been provided')
+            .custom(value => {
+                return RawCategory.findOne({where: {id: value}})
+                    .then(category => {
+                        if(!category)
+                            return Promise.reject('No such category registered');
+                    })
+            })
+    ], [
+        isAuth
+    ],
+    rawController.getRawsByCategory
+);
+
+router.post('/advanced-search-in-company', [
+        check('companyId')
+            .exists()
+            .withMessage('No companyId had been provided')
+            .custom(value => {
+                return Company.findOne({where: {id: value}})
+                    .then(company => {
+                        if(!company)
+                            return Promise.reject('No Such Company Exists');
+                    })
+            }),
+        check('name')
+            .exists()
+            .withMessage('No search name had been provided')
+            .isString()
+    ], [
+        isAuth
+    ],
+    rawController.postAdvancedRawsSearchInCompany
 );
 
 module.exports = router;
