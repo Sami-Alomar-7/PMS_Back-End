@@ -7,6 +7,10 @@ require('dotenv').config();
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
 
+// Util
+    // for sending notifications
+    const socket = require('../../Util/socket');
+
 // Helper
     // for the requests which failes not to fill the storage with unwanted files
         const deleteAfterMulter = require('../../Helper/deleteAfterMulter');
@@ -71,7 +75,7 @@ exports.postAddLaboratory = (req, res, next) => {
     const phone_number = req.body.phone_number;
     const image = req.file;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -83,7 +87,7 @@ exports.postAddLaboratory = (req, res, next) => {
             message: errors.array()[0].msg
         })
     }
-    
+
     // if there were no image uploaded set the default image
     if(!image)
         imagePath = path.join(__filename, '..', '..', '/data/default_images/laboratory/default_laboratory_profile_picture.jpg').substring(66,135).replace('\'','//');
@@ -99,7 +103,9 @@ exports.postAddLaboratory = (req, res, next) => {
     });
 
     laboratory.save()
-        .then(() => {
+        .then(laboratory => {
+            // for sending notification to all connected
+            io.emit('Laboratory', {action: 'create', laboratory: laboratory});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Laboratory Added Successfully'
@@ -123,7 +129,7 @@ exports.putUpdateLaboratory = (req, res, next) => {
     const updatedPhone_number = req.body.phone_number;
     const updateImage = req.file;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -152,6 +158,8 @@ exports.putUpdateLaboratory = (req, res, next) => {
             return laboratory.save();
         })
         .then(laboratory => {
+            // for sending notification to all connected
+            io.emit('Laboratory', {action: 'update', laboratory: laboratory});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Updated Successfully',
@@ -173,15 +181,16 @@ exports.putUpdateLaboratory = (req, res, next) => {
 exports.deleteLaboratory = (req, res, next) => {
     const laboratoryId = req.body.laboratoryId;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
+    let laboratoryTemp;
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-
     Laboratory.findOne({where: {id: laboratoryId}})
         .then(laboratory => {
+            laboratoryTemp = laboratory;
             // delete the laboratory image if it wasn't the default
             if(!isDefaultImage(laboratory.image_url))
                 deleteAfterMulter(laboratory.image_url);
@@ -189,6 +198,8 @@ exports.deleteLaboratory = (req, res, next) => {
             return Laboratory.destroy({where: {id: laboratory.id}})
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('Laboratory', {action: 'delete', laboratory: laboratoryTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Laboratory Deleted Successfully'

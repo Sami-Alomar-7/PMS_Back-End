@@ -260,10 +260,10 @@ sequelize
             
             // let the server listen on the chosed port 
             const httpServer = app.listen(process.env.SERVER_PORT);
-            const io = require('socket.io')(httpServer);
+            const io = require('./Util/socket').init(httpServer);
             io.on('connection', socket => {
                 io.emit('do', {message: 'Yes'})
-                io.on('test', t => {
+                socket.on('test', t => {
                     console.log(t)
                 })
             });

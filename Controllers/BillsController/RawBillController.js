@@ -15,6 +15,10 @@ require('dotenv').config();
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
 
+// Util
+    // for sending notifications
+    const socket = require('../../Util/socket');
+
 // number of orders which wiil be sent with a single request
 const BILL_ITEMS_PER_REQUEST = 10;
 
@@ -88,9 +92,9 @@ exports.postAddBill = (req, res, next) => {
     // get the buy_order id which the bill will be associated to and the list of the incoming raws
     const buyOrderId = req.body.buyOrderId;
     const raws = req.body.raws;
-    let totalPrice = 0;
+    let totalPrice = 0, billTemp;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -112,28 +116,35 @@ exports.postAddBill = (req, res, next) => {
             });
         })
         .then(bill => {
+            billTemp = bill;
             // add and save each bill-raw from the given list after adding the required data to it
-            raws.forEach(raw => {
-                BillRawItem.create({
-                    billId: bill.id,
-                    buyRawOrderItemId: raw.id,
-                    quantity: raw.quantity,
-                    price: raw.price,
-                    expiration_date: raw.expiration_date
-                })
-                .then(newRaw => {
+            const rawPromisesArray = raws.map(async raw => {
+                try{
+                    const newRaw = await BillRawItem.create({
+                        billId: bill.id,
+                        buyRawOrderItemId: raw.id,
+                        quantity: raw.quantity,
+                        price: raw.price,
+                        expiration_date: raw.expiration_date
+                    })
                     // add and save each raw from the bill to the laboratory stock                
-                    LaboratoryRaw.create({
+                    await LaboratoryRaw.create({
                         billRawsItemId: newRaw.id,
                         quantity: newRaw.quantity
-                    })
-                })
+                    })                
+                } catch(err) {
+                    throw new Error('Failed adding the bill raw items and inserting them to tha lab raws');
+                }
             })
+            return Promise.all(rawPromisesArray);
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('BuyBill', {action: 'create', bill: billTemp});
             return res.status(200).json({
                 operation: 'Succeed',
-                message: 'Raw_Bill Added Successfullt'
+                message: 'Raw_Bill Added Successfully',
+                bill: billTemp
             })
         })
         .catch(err => {
@@ -150,7 +161,7 @@ exports.putEditOrder = (req, res, next) => {
     const raws = req.body.raws;
     let totalPrice = 0, billTemp;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -159,7 +170,6 @@ exports.putEditOrder = (req, res, next) => {
         
     Bill.findOne({where: {id: billId}})
         .then(bill => {
-            billTemp = bill;
             // re-calculate the total price for the whole bill and save it
             raws.forEach(raw => {
                 totalPrice += raw.price * raw.quantity;
@@ -167,9 +177,10 @@ exports.putEditOrder = (req, res, next) => {
             bill.total_price = totalPrice;
             return bill.save();
         })
-        .then(() => {
+        .then(bill => {
+            billTemp = bill;
             // travers on all the given raws and update the quantity of them if it has been modified
-            raws.forEach(raw => {
+            const rawPromisesArray = raws.map(raw => {
                 return BillRawItem.findOne({where: {id: raw.id}})
                     .then(billRawItem => {
                         billRawItem.quantity = raw.quantity;
@@ -180,10 +191,11 @@ exports.putEditOrder = (req, res, next) => {
                         throw new Error('Failed Editing the Bill_Raw_Item quantities cause of:\n' + err.message);
                     })
             })
+            return Promise.all(rawPromisesArray);
         })
         .then(() => {
             // travers on all the given raws in the laboratory and update the quantity of them if it has been modified
-            raws.forEach(raw => {
+            const rawPromisesArray = raws.map(raw => {
                 return LaboratoryRaw.findOne({where: {billRawItemId: raw.id}})
                     .then(laboratoryRaw => {
                         laboratoryRaw.quantity = raw.quantity;
@@ -193,11 +205,15 @@ exports.putEditOrder = (req, res, next) => {
                         throw new Error('Failed Editing the Laboratory_Raws quantities cause of:\n' + err.message);
                     })
             })
+            return Promise.all(rawPromisesArray);
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('BuyBill', {action: 'update', bill: billTemp});
             return res.status(200).json({
                 operation: 'Succeed',
-                order: 'Bill_Raw Updated Successfully,You Can Check It Under The Number: ' + billTemp.order_number
+                order: 'Bill_Raw Updated Successfully,You Can Check It Under The Number: ' + billTemp.order_number,
+                bill: billTemp
             })
         })
         .catch(err => {
@@ -212,19 +228,22 @@ exports.deleteBill = (req, res, next) => {
     // get the bill id from the request body
     const billId = req.body.billId;
     const errors = validationResult(req);
-
+    let billTemp;
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-    
     Bill.findOne({where: {id: billId}})
         .then(bill => {
+            billTemp = bill;
             // just delete the bill
             return bill.destroy();
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('BuyBill', {action: 'delete', bill: billTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'bill Deleted Successfully'

@@ -92,24 +92,6 @@ router.post('/reject-order', [
     orderController.postRejectOrder
 );
 
-router.post('/ready-order', [
-        check('orderId')
-            .exists()
-            .withMessage('No orderId had been provided')
-            .custom(value => {
-                return Order.findOne({where: {id: value}})
-                    .then(order => {
-                        if(!order)
-                            return Promise.reject('Couldn\'t find the specified order');
-                    })
-            })
-    ], [
-        isAuth,
-        isAdminOrLaboratoryWorker
-    ], 
-    orderController.postReadyOrder
-);
-
 router.post('/add-order', [
         // checking the incoming data from the request
         check('laboratoryId')

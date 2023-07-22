@@ -5,6 +5,10 @@ const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 // using the .env file
 require('dotenv').config();
 
+// Util
+    // for sending notifications
+    const socket = require('../../Util/socket');
+
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
 
@@ -103,7 +107,7 @@ exports.getSpecificeLaboratoryOrders = (req, res, next) => {
 exports.postAcceptOrder = (req, res, next) => {
     const orderId = req.body.orderId;
     const errors = validationResult(req);
-    
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -119,6 +123,8 @@ exports.postAcceptOrder = (req, res, next) => {
             return order.save();
         })
         .then(order => {
+            // for sending notification to all connected
+            io.emit('LaboratoryOrder', {action: 'Accepted', order: order});
             return res.status(200).json({
                 operation: 'Succeed',
                 order: order
@@ -135,7 +141,7 @@ exports.postAcceptOrder = (req, res, next) => {
 exports.postRejectOrder = (req, res, next) => {
     const orderId = req.body.orderId;
     const errors = validationResult(req);
-    
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -151,38 +157,8 @@ exports.postRejectOrder = (req, res, next) => {
             return order.save();
         })
         .then(order => {
-            return res.status(200).json({
-                operation: 'Succeed',
-                order: order
-            })
-        })
-        .catch(err => {
-            next({
-                status: 500,
-                message: err.message
-            })
-        })
-}
-
-exports.postReadyOrder = (req, res, next) => {
-    const orderId = req.body.orderId;
-    const errors = validationResult(req);
-    
-    if(!errors.isEmpty())
-        return next({
-            status: 400,
-            message: errors.array()[0].msg
-        })
-    
-    Order.findOne({where: {id: orderId}})
-        .then(order => {
-            if(order.statu !== 'Accepted')
-                throw new Error('The Order is Not on a state which allowes you to put it Ready');
-            
-            order.statu = 'Ready'
-            return order.save();
-        })
-        .then(order => {
+            // for sending notification to all connected
+            io.emit('LaboratoryOrder', {action: 'Rejected', order: order});
             return res.status(200).json({
                 operation: 'Succeed',
                 order: order
@@ -205,7 +181,7 @@ exports.postAddOrder = (req, res, next) => {
     const statu = 'Waiting';
     const errors = validationResult(req);
     let lastOrderNumber;
-
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -230,6 +206,8 @@ exports.postAddOrder = (req, res, next) => {
             return newOrder.save();    
         })
         .then(order => {
+            // for sending notification to all connected
+            io.emit('LaboratoryOrder', {action: 'create', order: order});
             return res.status(200).json({
                 operation: 'Succeed',
                 order: order
@@ -251,27 +229,27 @@ exports.putEditOrder = (req, res, next) => {
     const updateQyantity = req.body.quantity;
     const updateStatu = req.body.statu;
     const errors = validationResult(req);
-    
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-
+    // get the specifiec order
     Order.findOne({where: {id: orderId}})
         .then(order => {
-
             // update the order with the new incoming data
             order.title = updateTitle;
             order.description = updateDescription;
             order.usage = updateUsage;
             order.quantity = updateQyantity;
             order.statu = updateStatu;
-
             // save the new object with its updated data
             return order.save()
         })
         .then(order => {
+            // for sending notification to all connected
+            io.emit('LaboratoryOrder', {action: 'update', order: order});
             return res.status(200).json({
                 operation: 'Succeed',
                 order: order
@@ -288,19 +266,22 @@ exports.putEditOrder = (req, res, next) => {
 exports.deleteOrder = (req, res, next) => {
     const orderId = req.body.orderId;
     const errors = validationResult(req);
-    
+    let orderTemp;
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-
     Order.findOne({where: {id: orderId}})
         .then(order => {
+            orderTemp = order;
             // just delete the order
             return order.destroy();
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('LaboratoryOrder', {action: 'delete', order: orderTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Order Deleted Successfully'

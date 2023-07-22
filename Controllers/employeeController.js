@@ -12,6 +12,10 @@ const { validationResult } = require('express-validator');
 // for hashing and creating tokens
 const bcrypt = require('bcryptjs');
 
+// Util
+    // for sending notifications
+    const socket = require('../Util/socket');
+
 // Helper
     // for the requests which failes not to fill the storage with unwanted files
     const deleteAfterMulter = require('../Helper/deleteAfterMulter');
@@ -136,7 +140,7 @@ exports.postAddEmployee = (req, res, next) =>{
     const errors = validationResult(req);
     let imagePath = '';
     let employeeTemp;
-
+    const io = socket.getIo();
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -180,6 +184,8 @@ exports.postAddEmployee = (req, res, next) =>{
             return employeeRole.save();
         })
         .then(employeeRole => {
+            // for sending a notification to all connected
+            io.emit('Employee', {action: 'create', employee: employeeTemp});
             return res.status(200).json({
                 message: 'Succeed',
                 employee: employeeTemp,
@@ -211,7 +217,7 @@ exports.putUpdateProfile = (req, res, next) => {
     const updateImage = req.file;
     const errors = validationResult(req);
     let tempEmployee;
-
+    const io = socket.getIo();
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -260,6 +266,8 @@ exports.putUpdateProfile = (req, res, next) => {
         return employeeRole.save();
     })
     .then(employeeRole => {
+        // for sending a notification to all connected
+        io.emit('Employee', {action: 'update', employee: tempEmployee});
         return res.status(200).json({
             operation: 'Succeed',
             updatedEmployee: tempEmployee,
@@ -304,21 +312,23 @@ exports.postAdvancedEmployeesSearch = (req, res, next) => {
 exports.deleteEmployee = (req, res, next) => {
     const employeeId = req.body.employeeId;
     const errors = validationResult(req);
-
+    let employeeTemp;
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-
     Employee.findOne({where: {id: employeeId}})
         .then(employee => {
+            employeeTemp = employee;
             // delete the employee image
             deleteAfterMulter(employee.image_url);
-            
             return Employee.destroy({where: {id: employee.id}});
         })
         .then(() => {
+            // for sending a notification to all connected
+            io.emit('Employee', {action: 'delete', employee: employeeTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 employee: 'Employee Deleted Successfully'

@@ -149,8 +149,12 @@ exports.postLogin = (req, res, next) => {
                 })
                 .then(employee => {
                     const code = employee.token;
+                    /*
+                    *   there is a limit just 100 per month so i am commenting this now during development procces
+                    *   will be set back when the project is ready
+                    */
                     // sending a mail for verifing the login attempt
-                    return mailsHelper.send(email, code, 'verify');
+                    //return mailsHelper.send(email, code, 'verify');
                 })
         })
         .then(() => {

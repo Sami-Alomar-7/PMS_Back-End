@@ -5,6 +5,10 @@ const Type = require('../../Models/CompaniesModels/CompanyType');
 // using the .env file
 require('dotenv').config();
 
+// Util
+    // for sending notifications
+    const socket = require('../../Util/socket');
+
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
 
@@ -85,7 +89,7 @@ exports.putUpdateProfile = (req, res, next) => {
     const updatedType = req.body.type;
     const updateImage = req.file;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -116,6 +120,8 @@ exports.putUpdateProfile = (req, res, next) => {
             return company.save();
         })
         .then(company => {
+            // for sending a notification to all connected
+            io.emit('Comapny', {action: 'update', company: company});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Updated Successfully',
@@ -183,22 +189,24 @@ exports.postAdvancedCompaniesSearch = (req, res, next) => {
 exports.deleteCompany = (req, res, next) => {
     const companyId = req.body.companyId;
     const errors = validationResult(req);
-
+    let companyTemp;
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-
     Company.findOne({where: {id: companyId}})
         .then(company => {
+            companyTemp = company;
             // delete the company image if it wasn't the default
             if(!isDefaultImage(company.image_url))
                 deleteAfterMulter(company.image_url);
-
             return Company.destroy({where: {id: company.id}})
         })
         .then(() => {
+            // for sending a notification to all connected
+            io.emit('Comapny', {action: 'delete', company: companyTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Company Deleted Successfully'

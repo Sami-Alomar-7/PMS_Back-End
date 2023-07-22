@@ -11,6 +11,10 @@ require('dotenv').config();
 // for cheking if there were any errors in the rqueset body
 const { validationResult } = require('express-validator');
 
+// Util
+    // for sending notifications
+    const socket = require('../../../Util/socket');
+
 // number of orders which wiil be sent with a single request
 const ORDER_ITEMS_PER_REQUEST = 10;
 
@@ -71,9 +75,9 @@ exports.postAddOrder = (req, res, next) => {
     // get the company id which the order will be associated to and the list of the chosed raws
     const companyId = req.body.companyId;
     const raws = req.body.raws;
-    let totalPrice = 0, lastOrderNumber;
+    let totalPrice = 0, lastOrderNumber, buyOrderTemp;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -97,16 +101,24 @@ exports.postAddOrder = (req, res, next) => {
             });
         })
         .then(buyOrder => {
+            buyOrderTemp = buyOrder;
             // add and save each chosed raw from the given list after adding the required data to it
-            raws.forEach(raw => {
-                BuyRawOrderItem.create({
-                    companyRawItemId: raw.id,
-                    buyOrderId: buyOrder.id,
-                    quantity: raw.quantity
-                })
+            const RawPromisesArray = raws.map(async raw => {
+                try {
+                    await BuyRawOrderItem.create({
+                        companyRawItemId: raw.id,
+                        buyOrderId: buyOrder.id,
+                        quantity: raw.quantity
+                    })
+                } catch(err) {
+                    throw new Error('Failed adding raw materials to buyOrder')
+                }
             })
+            return Promise.all(RawPromisesArray);
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('BuyOrder', {action: 'create', order: buyOrderTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Buy_Raw_Order Added Successfullt, You Can Check it Under The Number: ' + lastOrderNumber
@@ -124,9 +136,9 @@ exports.putEditOrder = (req, res, next) => {
     // get the order id and the list of the chosed raws
     const orderId = req.body.orderId;
     const raws = req.body.raws;
-    let totalPrice = 0, orderTemp;
+    let totalPrice = 0, buyOrderTemp;
     const errors = validationResult(req);
-
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
@@ -135,7 +147,6 @@ exports.putEditOrder = (req, res, next) => {
         
     BuyOrder.findOne({where: {id: orderId}})
         .then(order => {
-            orderTemp = order;
             // re-calculate the total price for the whole order and save it
             raws.forEach(raw => {
                 totalPrice += raw.price * raw.quantity;
@@ -143,9 +154,10 @@ exports.putEditOrder = (req, res, next) => {
             order.total_price = totalPrice;
             return order.save();
         })
-        .then(() => {
+        .then(buyOrder => {
+            buyOrderTemp = buyOrder;
             // travers on all the given raws and update the quantity of them if it has been modified
-            raws.forEach(raw => {
+            const RawPromisesArray = raws.map(raw => {
                 return BuyRawOrderItem.findOne({where: {companyRawItemId: raw.id}})
                     .then(buyOrderItem => {
                         buyOrderItem.quantity = raw.quantity;
@@ -155,11 +167,14 @@ exports.putEditOrder = (req, res, next) => {
                         throw new Error('Failed Editing the Buy_Order_Item quantities cause of:\n' + err.message);
                     })
             })
+            return Promise.all(RawPromisesArray);
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('BuyOrder', {action: 'update', order: buyOrderTemp});
             return res.status(200).json({
                 operation: 'Succeed',
-                order: 'Buy_Raw_Order Updated Successfully,You Can Check It Under The Number: ' + orderTemp.order_number
+                order: 'Buy_Raw_Order Updated Successfully,You Can Check It Under The Number: ' + buyOrderTemp.order_number
             })
         })
         .catch(err => {
@@ -174,19 +189,22 @@ exports.deleteOrder = (req, res, next) => {
     // get the order id from the request body
     const orderId = req.body.orderId;
     const errors = validationResult(req);
-
+    let buyOrderTemp;
+    const io = socket.getIo();
     if(!errors.isEmpty())
         return next({
             status: 400,
             message: errors.array()[0].msg
         })
-    
     BuyOrder.findOne({where: {id: orderId}})
         .then(order => {
+            buyOrderTemp = order;
             // just delete the order
             return order.destroy();
         })
         .then(() => {
+            // for sending notification to all connected
+            io.emit('BuyOrder', {action: 'delete', order: buyOrderTemp});
             return res.status(200).json({
                 operation: 'Succeed',
                 message: 'Buy_Order Deleted Successfully'
