@@ -4,6 +4,7 @@ const Laboratory = require('../../Models/LaboratoriesModels/LaboratoryModel');
 const LaboratoryRaw = require('../../Models/LaboratoriesModels/LaboratoryRawModel');
 const LaboratoryProduct = require('../../Models/LaboratoriesModels/LaboratoryProductModel');
 const LaboratoryProductRaws = require('../../Models/LaboratoriesModels/LaboratoryProductsRawsModel');
+const Report = require('../../Models/ReportsModels/ReportModel');
 
 // using the .env file
 require('dotenv').config();
@@ -24,6 +25,8 @@ const { validationResult } = require('express-validator');
     const isDefaultImage = require('../../Helper/isDefaultImage');
     // for applying the advanced search using string-similarity
     const similarSearch = require('../../Helper/retriveSimilarSearch');
+    // for getting the specifiec limites of the raw materials
+    const limites = require('../../Helper/getLimits');
 
 // number of orders which wiil be sent with a single request
 const PRODUCTS_PER_REQUEST = 10;
@@ -144,7 +147,7 @@ exports.postAddOrderProduct = (req, res, next) => {
     const raws = req.body.raws;
     const errors = validationResult(req);
     const io = socket.getIo();
-    let totalPrice, productTemp;
+    let totalPrice, productTemp, runOut = [];
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -211,21 +214,31 @@ exports.postAddOrderProduct = (req, res, next) => {
                         newRaw.quantity -= raw.quantity;
                         return newRaw.save();
                     })
-                    .then(async () => {
+                    .then(async newRaw => {
                         try{
                             // associate each raw material has been used with the product which has been used for
-                            await LaboratoryProductRaws.create({
+                            const labProdRaw = await LaboratoryProductRaws.create({
                                 quantity: raw.quantity,
                                 price: raw.price,
                                 labProductId: product.id,
                                 labRawId: raw.id
                             });
+                            const { run_out_limit } = await limites();
+                            if(newRaw.quantity <= run_out_limit && newRaw.quantity !== 0){
+                                await Report.create({
+                                    title: 'Run Out Limit',
+                                    description: 'the raw material ' + newRaw.name + ' has been reached the run out limit...requesting for a new order with this raw material is required',
+                                    type: false,
+                                    labRawId: newRaw.id,
+                                })
+                                runOut.push(labProdRaw);
+                            }
                         } catch(err) {
                             throw new Error('Failed adding the product raws items')
                         }
                     })
-                    .catch(() => {
-                        throw new Error('Failed Adding the raw materials which have been used in the manufacturing process');
+                    .catch(err => {
+                        throw new Error('Failed Adding the raw materials which have been used in the manufacturing process' + err.message);
                     })
             })
             return Promise.all(rawPromisesArray);
@@ -233,6 +246,8 @@ exports.postAddOrderProduct = (req, res, next) => {
         .then(() => {
             // for sending notification to all connected
             io.emit('LaboratoryProduct', {action: 'create', product: productTemp});
+            if(runOut !== [])
+                io.emit('Report', {Type: 'RunOut', Raws: runOut});
             return res.status(200).json({ 
                 operation: 'Succeed', 
                 message: 'Product Added Successfully',
@@ -260,7 +275,7 @@ exports.putEditProduct = (req, res, next) => {
     const updateRaws = req.body.raws;
     const errors = validationResult(req);
     const io = socket.getIo();
-    let totalPrice, productRawTemp, productTemp;
+    let totalPrice, productRawTemp, productTemp, runOut = [];
     // check if there is an error in the request
     if(!errors.isEmpty()){
         // if there where an error then delete the stored image
@@ -336,6 +351,22 @@ exports.putEditProduct = (req, res, next) => {
                 raws.quantity = (raws.quantity + productRawTemp.quantity) - raw.quantity;
                 return raws.save();
             })
+            .then(async newRaw => {
+                try {
+                    const { run_out_limit } = limites();
+                    if(newRaw.quantity <= run_out_limit && newRaw.quantity !== 0){
+                        await Report.create({
+                            title: 'Run Out Limit',
+                            description: 'the raw material ' + newRaw.name + ' has been reached the run out limit...requesting for a new order with this raw material is required',
+                            type: false,
+                            labRawId: newRaw.id,
+                        })
+                        runOut.push(newRaw);
+                    }
+                } catch(err) {
+                    throw new Error('Failed adding a run out report');
+                }
+            })
             .catch(err => {
                 throw new Error('Failed Adding the raw materials which have been used in the manufacturing process' + err);
             })
@@ -345,6 +376,8 @@ exports.putEditProduct = (req, res, next) => {
     .then(() => {
         // for sending notification to all connected
         io.emit('LaboratoryProduct', {action: 'update', product: productTemp});
+        if(runOut)
+            io.emit('Report', {action: 'RunOut', Raws: runOut});
         return res.status(200).json({
             operation: 'Succeed',
             product: 'Product updated Successfully',

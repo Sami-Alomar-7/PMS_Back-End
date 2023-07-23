@@ -9,9 +9,10 @@ const EmployeeRole = sequelize.define('employee_role', {
         primaryKey: true
     },
     salary: Sequelize.INTEGER,
-    employee_of_the_month: Sequelize.BOOLEAN,
-    expiration_limit: Sequelize.INTEGER,
-    run_out_limit: Sequelize.INTEGER
+    employee_of_the_month: {
+        type: Sequelize.BOOLEAN,
+        default: false
+    }
 }, {
     timestamps: false
 });

@@ -14,8 +14,11 @@ const bcrypt = require('bcryptjs');
 const tokenHelper = require('../Helper/tokens');
 const codeHelper = require('../Helper/code');
 
-// for sending mailes
-const mailsHelper = require('../Helper/mails');
+// Helper
+    // for sending mailes
+    const mailsHelper = require('../Helper/mails');
+    // for sending reports notifications after logging in
+    const sendReportsNotifications = require('../Helper/sendReportsNotifications');
 
 // for comparision operations in database
 const { Op } = require('sequelize');
@@ -209,6 +212,8 @@ exports.postVerifyLoggin = (req, res, next) => {
         return employee.save();
     })
     .then(employee => {
+        // for sending the unreaded reports as notifications to the logged in employee or admin
+        sendReportsNotifications();
         return res.status(200).json({
             operation: 'Succeed',
             message: 'Logged In Successfully',

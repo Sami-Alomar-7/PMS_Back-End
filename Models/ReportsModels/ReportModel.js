@@ -1,36 +1,30 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require('../../Util/database');
 
-const Laboratory = sequelize.define('laboratories', {
+const Report = sequelize.define('reports', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         allowNull: false,
         primaryKey: true
     },
-    name: {
+    title: {
         type: Sequelize.STRING,
         allowNull: false
     },
-    email: {
+    description: {
         type: Sequelize.STRING,
         allowNull: false
     },
-    phone_number: {
-        type: Sequelize.STRING,
+    type: {
+        type: Sequelize.BOOLEAN,
         allowNull: false
     },
-    image_url: Sequelize.STRING,
-    expiration_limit: {
-        type: Sequelize.INTEGER,
-        default: 14
-    },
-    run_out_limit: {
-        type: Sequelize.INTEGER,
-        default: 10
+    read: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        default: false
     }
-}, {
-    timestamps: false
 });
 
-module.exports = Laboratory;
+module.exports = Report;

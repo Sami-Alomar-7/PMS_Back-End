@@ -115,7 +115,7 @@ exports.postAddBill = (req, res, next) => {
                 order_number: order.order_number
             });
         })
-        .then(bill => {
+        .then(async bill => {
             billTemp = bill;
             // add and save each bill-raw from the given list after adding the required data to it
             const rawPromisesArray = raws.map(async raw => {
@@ -126,12 +126,12 @@ exports.postAddBill = (req, res, next) => {
                         quantity: raw.quantity,
                         price: raw.price,
                         expiration_date: raw.expiration_date
-                    })
-                    // add and save each raw from the bill to the laboratory stock                
+                    });
+                    // add and save each raw from the bill to the laboratory stock
                     await LaboratoryRaw.create({
                         billRawsItemId: newRaw.id,
                         quantity: newRaw.quantity
-                    })                
+                    })            
                 } catch(err) {
                     throw new Error('Failed adding the bill raw items and inserting them to tha lab raws');
                 }

@@ -74,6 +74,8 @@ exports.postAddLaboratory = (req, res, next) => {
     const email = req.body.email;
     const phone_number = req.body.phone_number;
     const image = req.file;
+    const expirationLimit = req.body.expirationLimit;
+    const runOutLimit = req.body.runOutLimit;
     const errors = validationResult(req);
     const io = socket.getIo();
     // check if there is an error in the request
@@ -99,7 +101,9 @@ exports.postAddLaboratory = (req, res, next) => {
         name: name,
         email: email,
         phone_number: phone_number,
-        image_url: imagePath
+        image_url: imagePath,
+        expiration_limit: expirationLimit,
+        run_out_limit: runOutLimit
     });
 
     laboratory.save()
@@ -128,6 +132,8 @@ exports.putUpdateLaboratory = (req, res, next) => {
     const updatedEmail = req.body.email;
     const updatedPhone_number = req.body.phone_number;
     const updateImage = req.file;
+    const upadteExpirationLimit = req.body.expirationLimit;
+    const updateRunOurLimit = req.body.run_out_limit;
     const errors = validationResult(req);
     const io = socket.getIo();
     // check if there is an error in the request
@@ -154,6 +160,8 @@ exports.putUpdateLaboratory = (req, res, next) => {
             laboratory.name = updatedName;
             laboratory.email = updatedEmail;
             laboratory.phone_number = updatedPhone_number;
+            laboratory.expiration_limit = upadteExpirationLimit
+            laboratory.run_out_limit = updateRunOurLimit;
             
             return laboratory.save();
         })

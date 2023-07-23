@@ -8,6 +8,9 @@ require('dotenv').config();
 // required meiddlware for resiving and sending data
 const bodyParser = require('body-parser');
 
+// for scheduling a function to run every specifice time
+const schedule = require('node-schedule');
+
 // the connection instance
 const sequelize = require('./Util/database');
 
@@ -46,12 +49,15 @@ const sequelize = require('./Util/database');
         const LaboratoryRaw = require('./Models/LaboratoriesModels/LaboratoryRawModel');
         const LaboratoryProduct = require('./Models/LaboratoriesModels/LaboratoryProductModel');
         const LaboratoryProductRaw = require('./Models/LaboratoriesModels/LaboratoryProductsRawsModel');
+    // Report Model
+        const Report = require('./Models/ReportsModels/ReportModel');
 
 // Routes
     const authRoute = require('./Routes/authRoute');
     const employeeRoute = require('./Routes/employeeRoutes');
     const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
     const laboratoryRoute = require('./Routes/LaboratoriesRoutes/LaboratoryRoute');
+    const reportRoute = require('./Routes/ReportsRoutes/ReportRoute');
 
 // Middleware
     // Multer for file uploading 
@@ -70,6 +76,8 @@ const sequelize = require('./Util/database');
     const setupDataset = require('./Helper/setupDatabase/setupDatabase');
     // checking for the authorization to determine the appropriate request rate limit
     const RateLimiterCheck = require('./Helper/RateLimiterCheck');
+    // for updating the report table whit the expired products and raw materials
+    const reportUpdate = require('./Helper/reportUpdate');
 
 // middlware that parses the incoming request body as JSON
 app.use(bodyParser.json());
@@ -108,8 +116,8 @@ const authRateLimiter = rateLimiter({
     windowMs: 10 * 60 * 1000,
     max: (req, res) => {
         if(RateLimiterCheck(req, res))
-            return 1000;
-        return 100;
+            return 100;
+        return 10;
     },
     message: 'Too many attempts from this IP, please try again after 10 minutes',
     standardHeaders: true, 
@@ -136,11 +144,19 @@ app.use('/api',[
     // fake requests or other brute force attacks
     authRateLimiter
 ]);
+
+// schedule to check every day at midnight for updating the reports
+const scheduleReport = schedule.scheduleJob('00 00 * * *', () => {
+    // update the reports with the new products and raw materials which has exceeded the expiration limit
+    reportUpdate();
+})
+
 // Useing the Auth Routes
 app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/company', companyRoute);
 app.use('/api/laboratory', laboratoryRoute);
+app.use('/api/report', reportRoute);
 app.use('/api', ErrorsMiddleware);
 
 // Defines the models and its associations
@@ -207,6 +223,9 @@ app.use('/api', ErrorsMiddleware);
     // Bill_Raws_Items --- Laboratory_Raws
         BillRawItem.hasOne(LaboratoryRaw);
         LaboratoryRaw.belongsTo(BillRawItem);
+    // Laboratory_Raws ---> Reports
+        LaboratoryRaw.hasMany(Report);
+        Report.belongsTo(LaboratoryRaw);
     // Laboratory_Orders ---> Laboratory_Products
         LaboratoryOrder.hasMany(LaboratoryProduct);
         LaboratoryProduct.belongsTo(LaboratoryOrder);
@@ -262,10 +281,7 @@ sequelize
             const httpServer = app.listen(process.env.SERVER_PORT);
             const io = require('./Util/socket').init(httpServer);
             io.on('connection', socket => {
-                io.emit('do', {message: 'Yes'})
-                socket.on('test', t => {
-                    console.log(t)
-                })
+                io.emit('do', {message: 'Yes'});
             });
         })
         .then(() => {

@@ -26,7 +26,7 @@ exports.getAllOrders = (req, res, next) => {
             model: Laboratory,
             attributes: ['name', 'image_url']
         },
-        attributes: ['createdAt', 'statu', 'quantity']
+        attributes: ['title', 'createdAt', 'statu', 'quantity']
     })
     .then(orders => {
         return res.status(200).json({
