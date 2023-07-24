@@ -80,6 +80,9 @@ exports.postRegister = (req, res, next) => {
                     const employeeRole = new EmployeeRole({
                         employeeId: employee.id,
                         roleId: role,
+                        expiration_limit: 14,
+                        run_out_limit: 10,
+                        employee_of_the_month: false
                     })
                     return employeeRole.save();
                 })
@@ -256,8 +259,12 @@ exports.postResetPassword = (req, res, next) => {
         })
         .then(employee => {
             const code = employee.token;
+            /*
+            *   there is a limit just 100 per month so i am commenting this now during development procces
+            *   will be set back when the project is ready
+            */
             // sending a mail for verifing the login attempt
-            return mailsHelper.send(email, code, 'reset');
+            // return mailsHelper.send(email, code, 'reset');
         })            
         .then(() => {
             return res.status(200).json({

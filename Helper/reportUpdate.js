@@ -22,7 +22,7 @@ module.exports = () => {
                     if(raw.bill_raws_item.expiration_date <= expiration_limit)
                         await Report.create({
                             title: 'Expiration Limit Exceeded',    
-                            description: 'Raw material ' + raw + ' is about to expire after two weeks',
+                            description: 'Raw material with the id' + raw.id + ' is about to expire after two weeks',
                             type: false,
                             read: false,
                             labRawId: raw.id

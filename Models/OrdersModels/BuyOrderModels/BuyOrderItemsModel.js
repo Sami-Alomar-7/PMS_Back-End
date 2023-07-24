@@ -11,6 +11,11 @@ const BuyOrderItem = sequelize.define('buy_order_items', {
     quantity: {
         type: Sequelize.INTEGER,
         allowNull: false
+    },
+    left_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        default: 0
     }
 });
 

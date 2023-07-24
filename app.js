@@ -40,6 +40,7 @@ const sequelize = require('./Util/database');
         const Category = require('./Models/ProductsModels/CategoryModel');
         const Type = require('./Models/ProductsModels/TypeModel');
         const Scince = require('./Models/ProductsModels/ScinceModel');
+        const ExternalProduct = require('./Models/ProductsModels/ExternalProductModel');
     // Raw Model
         const Raw = require('./Models/RawsModels/RawModel');
         const RawCategory = require('./Models/RawsModels/CategoryModel');
@@ -58,6 +59,8 @@ const sequelize = require('./Util/database');
     const companyRoute = require('./Routes/CompaniesRoutes/companyRoutes');
     const laboratoryRoute = require('./Routes/LaboratoriesRoutes/LaboratoryRoute');
     const reportRoute = require('./Routes/ReportsRoutes/ReportRoute');
+    const externalProductRoute = require('./Routes/ExternalProductsRoutes/ExternalProductRoute');
+    const classificationRoute = require('./Routes/ClassificationsRoutes/ClassificationRoute');
 
 // Middleware
     // Multer for file uploading 
@@ -116,7 +119,7 @@ const authRateLimiter = rateLimiter({
     windowMs: 10 * 60 * 1000,
     max: (req, res) => {
         if(RateLimiterCheck(req, res))
-            return 100;
+            return 1000;
         return 10;
     },
     message: 'Too many attempts from this IP, please try again after 10 minutes',
@@ -156,6 +159,8 @@ app.use('/api/auth', authRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/company', companyRoute);
 app.use('/api/laboratory', laboratoryRoute);
+app.use('/api/external-product', externalProductRoute);
+app.use('/api/classification', classificationRoute);
 app.use('/api/report', reportRoute);
 app.use('/api', ErrorsMiddleware);
 
@@ -217,6 +222,7 @@ app.use('/api', ErrorsMiddleware);
         BillRawItem.belongsTo(Bill);
         BuyRawOrderItem.hasMany(BillRawItem);
         BillRawItem.belongsTo(BuyRawOrderItem);
+// Laboratory
     // Laboratories ---> Laboratory_Orders
         Laboratory.hasMany(LaboratoryOrder);
         LaboratoryOrder.belongsTo(Laboratory);
@@ -246,6 +252,16 @@ app.use('/api', ErrorsMiddleware);
     // Scince ---> Products
         Scince.hasMany(Product);
         Product.belongsTo(Scince);
+// External_Products
+    // Categories ---> External_Products
+        Category.hasMany(ExternalProduct);
+        ExternalProduct.belongsTo(Category);
+    // Types ---> External_Products
+        Type.hasMany(ExternalProduct);
+        ExternalProduct.belongsTo(Type);
+    // Scince ---> External_Products
+        Scince.hasMany(ExternalProduct);
+        ExternalProduct.belongsTo(Scince);
 // Raws
     // rawCategories ---> Raws
         RawCategory.hasMany(Raw);
@@ -282,6 +298,7 @@ sequelize
             const io = require('./Util/socket').init(httpServer);
             io.on('connection', socket => {
                 io.emit('do', {message: 'Yes'});
+                console.log('Connnected with Socket.io');
             });
         })
         .then(() => {

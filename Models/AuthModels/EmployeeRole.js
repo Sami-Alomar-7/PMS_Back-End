@@ -12,6 +12,14 @@ const EmployeeRole = sequelize.define('employee_role', {
     employee_of_the_month: {
         type: Sequelize.BOOLEAN,
         default: false
+    },
+    expiration_limit: {
+        type: Sequelize.INTEGER,
+        default: 14
+    },
+    run_out_limit: {
+        type: Sequelize.INTEGER,
+        default: 10
     }
 }, {
     timestamps: false

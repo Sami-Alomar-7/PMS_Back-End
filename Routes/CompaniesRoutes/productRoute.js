@@ -4,6 +4,8 @@ const router = express.Router();
 // Models
     const Product = require('../../Models/ProductsModels/ProductModel');
     const Company = require('../../Models/CompaniesModels/CompanyModel');
+    const Category = require('../../Models/ProductsModels/CategoryModel');
+    const Type = require('../../Models/ProductsModels/TypeModel');
 
 // Required Middleware
 const isAuth = require('../../Middleware/isAuth');
@@ -14,11 +16,9 @@ const { check } = require('express-validator');
 
 // the controllers which the requests forwarded to
 const productController = require('../../Controllers/CompaniesController/productController');
-const Category = require('../../Models/ProductsModels/CategoryModel');
 
 router.get('/display-all', [
-        isAuth,
-        isAdmin
+        isAuth
     ],  
     productController.getAllProducts
 );

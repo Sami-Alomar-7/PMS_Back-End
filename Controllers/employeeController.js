@@ -179,7 +179,8 @@ exports.postAddEmployee = (req, res, next) =>{
             const employeeRole = new EmployeeRole({
                 employeeId: employee.id,
                 roleId: role,
-                salary: salary
+                salary: salary,
+                employee_of_the_month: false
             });
             return employeeRole.save();
         })
@@ -323,7 +324,8 @@ exports.deleteEmployee = (req, res, next) => {
         .then(employee => {
             employeeTemp = employee;
             // delete the employee image
-            deleteAfterMulter(employee.image_url);
+            if(!isDefaultImage(employee.image_url))
+                deleteAfterMulter(employee.image_url);
             return Employee.destroy({where: {id: employee.id}});
         })
         .then(() => {

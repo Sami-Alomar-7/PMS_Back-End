@@ -20,15 +20,7 @@ const Laboratory = sequelize.define('laboratories', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    image_url: Sequelize.STRING,
-    expiration_limit: {
-        type: Sequelize.INTEGER,
-        default: 14
-    },
-    run_out_limit: {
-        type: Sequelize.INTEGER,
-        default: 10
-    }
+    image_url: Sequelize.STRING
 }, {
     timestamps: false
 });

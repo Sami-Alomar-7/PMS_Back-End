@@ -5,7 +5,7 @@ const socket = require('../Util/socket');
 module.exports = () => {
     const io = socket.getIo();
     Report.findAll({
-        limit: 50
+        limit: 15
     })
     .then(reports => {
         const reportsPromisesArray = reports.map(report => {

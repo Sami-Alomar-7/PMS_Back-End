@@ -120,6 +120,9 @@ exports.postAddBill = (req, res, next) => {
             // add and save each bill-raw from the given list after adding the required data to it
             const rawPromisesArray = raws.map(async raw => {
                 try{
+                    const rawOrderItem = await BuyRawOrderItem.findOne({where: {id: raw.id}});
+                    if(raw.quantity > rawOrderItem.left_quantity)
+                        throw new Error('Failed to insert a raw item quantity greater than the ordered quantity');
                     const newRaw = await BillRawItem.create({
                         billId: bill.id,
                         buyRawOrderItemId: raw.id,
@@ -181,7 +184,12 @@ exports.putEditOrder = (req, res, next) => {
             billTemp = bill;
             // travers on all the given raws and update the quantity of them if it has been modified
             const rawPromisesArray = raws.map(raw => {
-                return BillRawItem.findOne({where: {id: raw.id}})
+                return BuyRawOrderItem.findOne({where: {id: raw.id}})
+                    .then(rawOrderItem => {
+                        if(raw.quantity > rawOrderItem.left_quantity)
+                            throw new Error('Failed to insert a raw item quantity greater than the ordered quantity');
+                        return BillRawItem.findOne({where: {id: raw.id}})
+                    })
                     .then(billRawItem => {
                         billRawItem.quantity = raw.quantity;
                         billRawItem.price = raw.price;

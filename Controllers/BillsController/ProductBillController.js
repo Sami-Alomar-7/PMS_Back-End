@@ -119,6 +119,9 @@ exports.postAddBill = (req, res, next) => {
             // add and save each bill-product from the given list after adding the required data to it
             const productPromisesArray = products.map(async product => {
                 try {
+                    const orderItem = await BuyOrderItem.findOne({where: {id: product.id}});
+                    if(product.quantity > orderItem.left_quantity)
+                        throw new Error('Failed to insert a product item quantity greater than the ordered quantity')
                     await BillProductItem.create({
                         billId: bill.id,
                         buyOrderItemId: product.id,
@@ -175,7 +178,12 @@ exports.putEditOrder = (req, res, next) => {
             billTemp = bill;
             // travers on all the given products and update the quantity of them if it has been modified
             const productPromisesArray = products.forEach(product => {
-                return BillProductItem.findOne({where: {id: product.id}})
+                return BuyOrderItem.findOne({where: {id: product.id}})
+                    .then(orderItem => {
+                        if(product.quantity > orderItem.left_quantity)    
+                            throw new Error('Failed to insert a product item quantity greater than the ordered quantity')
+                        return BillProductItem.findOne({where: {id: product.id}})
+                    })
                     .then(billProductItem => {
                         billProductItem.quantity = product.quantity;
                         billProductItem.price = product.price;

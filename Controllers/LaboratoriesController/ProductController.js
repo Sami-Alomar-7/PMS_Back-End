@@ -227,7 +227,7 @@ exports.postAddOrderProduct = (req, res, next) => {
                             if(newRaw.quantity <= run_out_limit && newRaw.quantity !== 0){
                                 await Report.create({
                                     title: 'Run Out Limit',
-                                    description: 'the raw material ' + newRaw.name + ' has been reached the run out limit...requesting for a new order with this raw material is required',
+                                    description: 'the raw material with the id' + newRaw.id + ' has been reached the run out limit...requesting for a new order with this raw material is required',
                                     type: false,
                                     labRawId: newRaw.id,
                                 })

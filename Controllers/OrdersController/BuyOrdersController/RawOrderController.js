@@ -108,7 +108,8 @@ exports.postAddOrder = (req, res, next) => {
                     await BuyRawOrderItem.create({
                         companyRawItemId: raw.id,
                         buyOrderId: buyOrder.id,
-                        quantity: raw.quantity
+                        quantity: raw.quantity,
+                        left_quantity: raw.quantity
                     })
                 } catch(err) {
                     throw new Error('Failed adding raw materials to buyOrder')
@@ -161,6 +162,7 @@ exports.putEditOrder = (req, res, next) => {
                 return BuyRawOrderItem.findOne({where: {companyRawItemId: raw.id}})
                     .then(buyOrderItem => {
                         buyOrderItem.quantity = raw.quantity;
+                        buyOrderItem.left_quantity = raw.quantity;
                         return buyOrderItem.save();
                     })
                     .catch(err => {

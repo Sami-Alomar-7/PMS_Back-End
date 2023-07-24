@@ -45,18 +45,21 @@ exports.getSpecificeReport = (req, res, next) => {
             message: errors.array()[0].msg
         })
     Report.findOne({where: { id: reportId}})
-    .then(report => {
-        return res.status(200).json({
-            operation: 'Succeed',
-            report: report
+        .then(report => {
+            // Mark the report as read
+            if(report.read === false)
+                report.read = true;
+            return res.status(200).json({
+                operation: 'Succeed',
+                report: report
+            })
         })
-    })
-    .catch(err => {
-        next({
-            status: 500,
-            message: err.message
+        .catch(err => {
+            next({
+                status: 500,
+                message: err.message
+            })
         })
-    })
 };
 
 exports.postMarkReportAsRead = (req, res, next) => {
